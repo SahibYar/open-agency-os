@@ -72,7 +72,9 @@ h1.hero { margin-top: 20px; max-width: 896px; letter-spacing: -0.03em; line-heig
 .section { margin-top: 64px; }
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .head h2, .section > h2, .manifesto h2 { font-size: 30px; line-height: 36px; letter-spacing: -0.02em; }
-.head a { font-size: 14px; color: var(--muted); }
+.head a { font-size: 14px; line-height: 20px; color: var(--muted); }
+.close .sub { max-width: 512px; }
+.note a { display: inline-block; font-size: 14px; line-height: 20px; }
 .sub { margin-top: 8px; max-width: 576px; color: var(--muted); font-size: 14px; line-height: 20px; }
 .layers { list-style: none; padding: 0; margin: 24px 0 0; }
 .eyebrow { font-size: 12px; line-height: 16px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--subtle); }
