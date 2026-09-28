@@ -1,21 +1,25 @@
 # Contributing
 
-Thank you. This project only works if agencies and operators file the sharp edges.
+Aperture grows by playbooks and deploy notes, not by wrapping every upstream API in a new framework.
 
-## First contributions we want
+## Good first contributions
 
-- n8n playbooks with a short markdown description
-- Compose fixes against a specific upstream version
-- Docs for a HighLevel feature you mapped to this stack
-- Translations of the README
+- A stripped n8n export plus a section in `docs/playbooks.md`
+- A fix to compose healthchecks you actually hit
+- A paragraph in `docs/getting-started.md` for a distro or VPS provider quirk
+- An issue that names a HighLevel workflow and the open-source path that replaces it
 
-## How to send work
+## Not accepted without a design issue
 
-1. Fork `SahibYar/open-agency-os`
-2. One concern per PR
-3. Name the upstream version you tested
-4. Do not vendor entire upstream codebases
+- A custom CRM
+- A unified person database that bypasses Twenty
+- SaaS billing
+- Rebranding upstream logos into "Aperture CRM"
 
-## Conduct
+## Licenses
 
-Be direct. No HighLevel-bashing for its own sake. No claiming feature parity that is not in the tree.
+Integration files in this repo are MIT. Do not paste AGPL or Sustainable Use source into this tree. Link to upstream instead.
+
+## Security
+
+Do not open a public issue with live credentials. Rotate anything you pasted, then email the maintainer via the address on the GitHub profile.
