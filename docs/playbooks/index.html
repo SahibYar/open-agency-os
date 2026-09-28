@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Playbooks — Aperture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono&family=Instrument+Serif&display=swap"/>
+<link rel="stylesheet" href="../site.css"/></head><body>
+<header><div class="wrap bar"><a class="brand" href="../"><span class="mark">A</span><span><strong>Aperture</strong><span>Open Agency OS</span></span></a>
+<nav class="desktop"><a href="../">Manifesto</a><a href="../stack/">Stack</a><a href="../guide/">Deploy</a><a href="../compare/">Vs HighLevel</a><a href="./" aria-current="page">Playbooks</a></nav>
+<a class="star" href="https://github.com/SahibYar/open-agency-os">Star on GitHub</a></div></header>
+<main class="wrap">
+<p class="kicker">n8n recipes</p>
+<h1>How the disconnected pieces become one product</h1>
+<p class="lede">These are the first four agency paths. JSON exports live in <code>n8n/workflows/</code> on GitHub. Import them after the core profile is up.</p>
+<article class="layer"><p class="meta">01 · 25 min · Trigger: WordPress or native form POST</p><h3>Form → Twenty contact → Mautic segment</h3><ul class="clean"><li>Form hits n8n webhook.</li><li>Normalize name, email, phone, source.</li><li>Upsert person in Twenty GraphQL.</li><li>Create or update Mautic contact and add to a segment.</li><li>Open a Chatwoot conversation if the lead asked a question.</li></ul></article>
+<article class="layer"><p class="meta">02 · 20 min · Trigger: New Twenty person with source = ads</p><h3>Speed-to-lead SMS in 60 seconds</h3><ul class="clean"><li>Twenty webhook → n8n.</li><li>Quiet hours check.</li><li>Twilio SMS with first-name merge.</li><li>Log the message on the contact.</li><li>If no reply in 10 minutes, create a Chatwoot assignment.</li></ul></article>
+<article class="layer"><p class="meta">03 · 15 min · Trigger: BOOKING_CREATED</p><h3>Cal.com booking → pipeline + reminder</h3><ul class="clean"><li>Match attendee email to Twenty.</li><li>Move opportunity to Booked.</li><li>Mautic: enroll in appointment nurture.</li><li>n8n wait until T-24h, send SMS reminder.</li></ul></article>
+<article class="layer"><p class="meta">04 · 40 min · Trigger: Conversation opened</p><h3>Chatwoot sidebar shows CRM context</h3><ul class="clean"><li>Lookup Twenty by email or phone.</li><li>Post a private note: deals, last campaign, tags.</li><li>If unknown, create a lead and tag source = inbox.</li></ul></article>
+<p style="margin-top:1.5rem"><a href="https://github.com/SahibYar/open-agency-os/tree/main/n8n/workflows">Open workflow JSON on GitHub</a></p>
+</main>
+<footer><div class="wrap"><p>Aperture is not affiliated with GoHighLevel.</p><a href="https://github.com/SahibYar/open-agency-os">Repository</a></div></footer>
+</body></html>

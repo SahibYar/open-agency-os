@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Deploy — Aperture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono&family=Instrument+Serif&display=swap"/>
+<link rel="stylesheet" href="../site.css"/></head><body>
+<header><div class="wrap bar"><a class="brand" href="../"><span class="mark">A</span><span><strong>Aperture</strong><span>Open Agency OS</span></span></a>
+<nav class="desktop"><a href="../">Manifesto</a><a href="../stack/">Stack</a><a href="./" aria-current="page">Deploy</a><a href="../compare/">Vs HighLevel</a><a href="../playbooks/">Playbooks</a></nav>
+<a class="star" href="https://github.com/SahibYar/open-agency-os">Star on GitHub</a></div></header>
+<main class="wrap">
+<p class="kicker">Deploy</p>
+<h1>Self-host the agency OS</h1>
+<p class="lede">This site is the map. The runnable definition lives in the public repository: compose files, env templates, Caddyfile, and n8n exports.</p>
+<ol class="steps">
+<li class="step"><span class="num">01</span><div><h3>Provision a box</h3><p>16 GB RAM is the realistic floor for CRM + n8n + inbox. 8 GB is fine for core (Caddy + Postgres + Redis + n8n) while you learn.</p></div></li>
+<li class="step"><span class="num">02</span><div><h3>Clone the repo</h3><p>git clone https://github.com/SahibYar/open-agency-os.git &amp;&amp; cd open-agency-os &amp;&amp; cp .env.example .env</p></div></li>
+<li class="step"><span class="num">03</span><div><h3>Bring up core</h3><p>docker compose --profile core up -d — Caddy, Postgres, Redis, n8n. Open n8n on the glue hostname.</p></div></li>
+<li class="step"><span class="num">04</span><div><h3>Add one layer at a time</h3><p>crm, inbox, booking, marketing, pages are compose profiles. Do not enable all of them on a laptop.</p></div></li>
+<li class="step"><span class="num">05</span><div><h3>Import playbooks</h3><p>n8n → Import from n8n/workflows. Point webhooks at your public glue URL.</p></div></li>
+</ol>
+<pre>git clone https://github.com/SahibYar/open-agency-os.git
+cd open-agency-os
+cp .env.example .env
+# set DOMAIN, secrets, and Twilio keys
+docker compose --profile core up -d</pre>
+<div class="row"><a class="btn" href="https://github.com/SahibYar/open-agency-os#quick-start">Open the README</a><a class="btn ghost" href="https://github.com/SahibYar/open-agency-os/blob/main/docker-compose.yml">docker-compose.yml</a></div>
+</main>
+<footer><div class="wrap"><p>Aperture is not affiliated with GoHighLevel.</p><a href="https://github.com/SahibYar/open-agency-os">Repository</a></div></footer>
+</body></html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Stack — Aperture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono&family=Instrument+Serif&display=swap"/>
+<link rel="stylesheet" href="../site.css"/></head><body>
+<header><div class="wrap bar"><a class="brand" href="../"><span class="mark">A</span><span><strong>Aperture</strong><span>Open Agency OS</span></span></a>
+<nav class="desktop"><a href="../">Manifesto</a><a href="./" aria-current="page">Stack</a><a href="../guide/">Deploy</a><a href="../compare/">Vs HighLevel</a><a href="../playbooks/">Playbooks</a></nav>
+<a class="star" href="https://github.com/SahibYar/open-agency-os">Star on GitHub</a></div></header>
+<main class="wrap">
+<p class="kicker">Layer map</p>
+<h1>Eight products. One operating system.</h1>
+<p class="lede">We pick one default per layer so agencies are not staring at a catalog. Swaps are documented. The contract is the event bus — n8n webhooks — not a proprietary schema.</p>
+<article class="layer"><p class="meta">CRM &amp; pipelines · Contacts, companies, deals, custom objects.</p><h3>Twenty — Modern CRM core</h3><p><a href="https://github.com/twentyhq/twenty">Upstream</a>. Fastest-growing open CRM. GraphQL, custom objects, a UI agencies will actually use. Replaces GHL pipelines, contacts, opportunities. License AGPL-3.0. Compose profile <code>crm</code>.</p></article>
+<article class="layer"><p class="meta">Marketing automation</p><h3>Mautic — Campaign engine</h3><p><a href="https://www.mautic.org/">Upstream</a>. Closest open-source equivalent to HighLevel marketing automation. License GPL-3.0. Profile <code>marketing</code>. Needs MariaDB.</p></article>
+<article class="layer"><p class="meta">Conversations</p><h3>Chatwoot — Omnichannel inbox</h3><p><a href="https://github.com/chatwoot/chatwoot">Upstream</a>. Web widget, email, WhatsApp, Instagram, Facebook. License MIT. Profile <code>inbox</code>.</p></article>
+<article class="layer"><p class="meta">Calendars</p><h3>Cal.com — Scheduling</h3><p><a href="https://github.com/calcom/cal.com">Upstream</a>. Self-hostable booking with team routing and webhooks into n8n. License AGPL-3.0. Profile <code>booking</code>.</p></article>
+<article class="layer"><p class="meta">Funnels &amp; sites</p><h3>WordPress</h3><p><a href="https://wordpress.org/">Upstream</a>. Landing pages, forms, memberships. Forms post to n8n. License GPL. Profile <code>pages</code>.</p></article>
+<article class="layer"><p class="meta">Workflow glue</p><h3>n8n — Automation bus</h3><p><a href="https://github.com/n8n-io/n8n">Upstream</a>. Self-hostable, code nodes, executions not per-step. Fair-code Sustainable Use + Enterprise. Always on. Profile <code>core</code>.</p></article>
+<article class="layer"><p class="meta">SMS &amp; voice</p><h3>Twilio (or any SIP/SMS)</h3><p><a href="https://www.twilio.com/">Upstream</a>. Keep the pipe separate. Swap carriers without migrating the CRM. Commercial API. Keys in <code>.env</code>.</p></article>
+<article class="layer"><p class="meta">Edge</p><h3>Caddy — HTTPS gateway</h3><p><a href="https://caddyserver.com/">Upstream</a>. Automatic TLS. One hostname per service. License Apache-2.0. Profile <code>core</code>.</p></article>
+</main>
+<footer><div class="wrap"><p>Aperture is not affiliated with GoHighLevel.</p><a href="https://github.com/SahibYar/open-agency-os">Repository</a></div></footer>
+</body></html>

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aperture — Open Agency OS</title>
+<meta name="description" content="An open-source alternative to GoHighLevel, assembled from Twenty, Mautic, Chatwoot, Cal.com, n8n, and WordPress." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono&family=Instrument+Serif&display=swap" />
+<link rel="stylesheet" href="site.css" />
+</head>
+<body>
+<header><div class="wrap bar">
+<a class="brand" href="./"><span class="mark">A</span><span><strong>Aperture</strong><span>Open Agency OS</span></span></a>
+<nav class="desktop">
+<a href="./" aria-current="page">Manifesto</a>
+<a href="stack/">Stack</a>
+<a href="guide/">Deploy</a>
+<a href="compare/">Vs HighLevel</a>
+<a href="playbooks/">Playbooks</a>
+</nav>
+<a class="star" href="https://github.com/SahibYar/open-agency-os">Star on GitHub</a>
+</div></header>
+<main class="wrap">
+<p class="kicker">Public claim · MIT/AGPL stack · not a HighLevel clone</p>
+<h1>An open-source alternative to GoHighLevel, assembled from software that already exists.</h1>
+<p class="lede">Agencies do not need another closed CRM. They need the best open tools — Twenty, Mautic, Chatwoot, Cal.com, n8n, WordPress — wired into one self-hosted operating system. Aperture is that wiring. We are building it in the open.</p>
+<div class="row">
+<a class="btn" href="https://github.com/SahibYar/open-agency-os">Star the repository</a>
+<a class="btn ghost" href="guide/">Read the deploy guide</a>
+</div>
+<div class="grid three">
+<article class="card"><p class="meta">Self-hosted</p><h3>Your VPS</h3><p>Your Postgres. No per-contact rent.</p></article>
+<article class="card"><p class="meta">n8n as the bus</p><h3>One OS</h3><p>Disconnected products become one OS through workflows, not a monolith.</p></article>
+<article class="card"><p class="meta">Honest gaps</p><h3>No fake parity</h3><p>We publish what GHL still does better — white-label SaaS and reputation.</p></article>
+</div>
+<section class="section">
+<h2>The stack</h2>
+<p class="lede">Eight layers. Each one is a mature project with its own community. We do not rewrite them. We integrate them. <a href="stack/">Full map</a>.</p>
+<div class="grid two" style="margin-top:1rem">
+<article class="card"><p class="meta">CRM &amp; pipelines</p><h3>Twenty</h3><p>Contacts, companies, deals, custom objects.</p></article>
+<article class="card"><p class="meta">Marketing automation</p><h3>Mautic</h3><p>Campaigns, segments, scoring, drip journeys.</p></article>
+<article class="card"><p class="meta">Conversations</p><h3>Chatwoot</h3><p>Shared inbox across email, chat, social, WhatsApp.</p></article>
+<article class="card"><p class="meta">Calendars</p><h3>Cal.com</h3><p>Public booking, round-robin, reminders.</p></article>
+<article class="card"><p class="meta">Funnels &amp; sites</p><h3>WordPress</h3><p>Landing pages, forms, memberships.</p></article>
+<article class="card"><p class="meta">Workflow glue</p><h3>n8n</h3><p>The nervous system. Every tool talks through here.</p></article>
+<article class="card"><p class="meta">SMS &amp; voice</p><h3>Twilio</h3><p>Usage-priced carriers. Never lock messaging into the CRM.</p></article>
+<article class="card"><p class="meta">Edge</p><h3>Caddy</h3><p>TLS, hostnames, SSO-ready reverse proxy.</p></article>
+</div>
+</section>
+<section class="section">
+<h2>The manifesto</h2>
+<p class="lede">GoHighLevel won because it bundled CRM, SMS, funnels, calendars, and agency sub-accounts into one login. The tax is lock-in: your contacts, automations, and client work live on someone else’s meter.</p>
+<p class="lede">The open-source world already has each piece. Twenty is a serious CRM. Mautic is a serious campaign engine. Chatwoot is a serious inbox. Cal.com is a serious scheduler. n8n is a serious automation bus. They are disconnected. Agencies should not have to become platform engineers to use them together.</p>
+<p class="lede">Aperture is the public attempt to integrate them — compose files, identity, playbooks, and a control plane — so any agency can self-host a HighLevel-class stack for the cost of a server.</p>
+</section>
+<section class="section">
+<h2>What we will not fake</h2>
+<div class="grid two">
+<article class="card"><h3>White-label SaaS mode</h3><p>GHL sells sub-accounts. We start with Caddy hostnames + per-client n8n credentials. A true snapshot/SaaS control plane is a tracked issue.</p></article>
+<article class="card"><h3>Reputation management</h3><p>No mature open-source Birdeye equivalent. Reviews stay a playbook (Google + n8n) until a dedicated module lands.</p></article>
+<article class="card"><h3>Unified login</h3><p>Each product has its own auth today. Roadmap: Authelia or Pocket ID in front of the gateway.</p></article>
+<article class="card"><h3>You are the integrator</h3><p>This is honest. The software is free. The work of keeping versions, backups, and deliverability healthy is yours — or your DevOps partner’s.</p></article>
+</div>
+</section>
+<section class="section">
+<h2>Fork it. Run it. Argue with us.</h2>
+<p class="lede">Stars, issues, and playbooks are how this becomes a real alternative instead of a README.</p>
+<p><a href="https://github.com/SahibYar/open-agency-os">github.com/SahibYar/open-agency-os</a></p>
+</section>
+</main>
+<footer><div class="wrap"><p>Aperture is not affiliated with GoHighLevel. Independent open-source integration of existing software.</p><a href="https://github.com/SahibYar/open-agency-os">Repository</a></div></footer>
+</body></html>
