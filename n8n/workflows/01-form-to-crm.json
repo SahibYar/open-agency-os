@@ -1,15 +1,90 @@
 {
-  "name": "Aperture Form to CRM",
+  "name": "Aperture — form to CRM",
   "nodes": [
     {
-      "parameters": { "path": "aperture-lead", "httpMethod": "POST" },
-      "id": "webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aperture-lead",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-lead",
       "name": "Form webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [0, 0],
+      "position": [240, 300],
       "webhookId": "aperture-lead"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.TWENTY_URL}}/rest/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{$env.TWENTY_TOKEN}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $json.body.firstName || $json.body.name, lastName: $json.body.lastName || '-' }, emails: { primaryEmail: $json.body.email }, phones: { primaryPhoneNumber: $json.body.phone || '' } }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-twenty",
+      "name": "Twenty create person",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.CHATWOOT_URL}}/api/v1/accounts/{{$env.CHATWOOT_ACCOUNT_ID}}/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api_access_token", "value": "={{$env.CHATWOOT_TOKEN}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Form webhook').item.json.body.name, email: $('Form webhook').item.json.body.email, phone_number: $('Form webhook').item.json.body.phone || '' }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-chatwoot",
+      "name": "Chatwoot create contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.MAUTIC_URL}}/api/contacts/new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Basic {{$env.MAUTIC_BASIC}}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ firstname: $('Form webhook').item.json.body.firstName, lastname: $('Form webhook').item.json.body.lastName, email: $('Form webhook').item.json.body.email, phone: $('Form webhook').item.json.body.phone || '' }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-mautic",
+      "name": "Mautic create contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, 300]
     }
   ],
-  "active": false
+  "connections": {
+    "Form webhook": { "main": [[{ "node": "Twenty create person", "type": "main", "index": 0 }]] },
+    "Twenty create person": { "main": [[{ "node": "Chatwoot create contact", "type": "main", "index": 0 }]] },
+    "Chatwoot create contact": { "main": [[{ "node": "Mautic create contact", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
 }

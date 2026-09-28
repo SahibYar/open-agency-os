@@ -41,6 +41,7 @@ services:
       MYSQL_PASSWORD: ${MAUTIC_DB_PASSWORD:?set MAUTIC_DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./ops/mariadb-init:/docker-entrypoint-initdb.d:ro
 
   n8n:
     image: n8nio/n8n:latest
@@ -55,6 +56,19 @@ services:
       N8N_PROTOCOL: ${N8N_PROTOCOL:-https}
       WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
       GENERIC_TIMEZONE: ${TZ:-UTC}
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      TWENTY_URL: ${TWENTY_URL:-http://twenty:3000}
+      TWENTY_TOKEN: ${TWENTY_TOKEN:-}
+      CHATWOOT_URL: ${CHATWOOT_INTERNAL_URL:-http://chatwoot:3000}
+      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-1}
+      CHATWOOT_TOKEN: ${CHATWOOT_TOKEN:-}
+      MAUTIC_URL: ${MAUTIC_URL:-http://mautic}
+      MAUTIC_BASIC: ${MAUTIC_BASIC:-}
+      CALCOM_URL: ${CALCOM_INTERNAL_URL:-http://calcom:3000}
+      CALCOM_API_KEY: ${CALCOM_API_KEY:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_BASIC: ${TWILIO_BASIC:-}
+      TWILIO_FROM: ${TWILIO_FROM:-}
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_DATABASE: n8n

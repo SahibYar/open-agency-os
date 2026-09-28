@@ -1,0 +1,59 @@
+{
+  "name": "Aperture — booking to pipeline",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "aperture-booking", "responseMode": "onReceived", "options": {} },
+      "id": "wh-book",
+      "name": "Booking webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "aperture-booking"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.CALCOM_URL}}/api/v2/bookings",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{$env.CALCOM_API_KEY}}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-cal",
+      "name": "Cal.com create booking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.TWENTY_URL}}/rest/opportunities",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "=Bearer {{$env.TWENTY_TOKEN}}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ stage: 'Appointment', title: $('Booking webhook').item.json.body.title, email: $('Booking webhook').item.json.body.email || $('Booking webhook').item.json.body.attendee?.email }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-twenty-stage",
+      "name": "Twenty move deal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 380]
+    }
+  ],
+  "connections": {
+    "Booking webhook": {
+      "main": [[
+        { "node": "Cal.com create booking", "type": "main", "index": 0 },
+        { "node": "Twenty move deal", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

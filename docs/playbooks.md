@@ -1,72 +1,73 @@
 # Playbooks
 
-A playbook is an n8n workflow plus the data contract. JSON under `n8n/workflows/` is the start of that contract. Credentials are never committed.
+A playbook is an n8n workflow plus the data contract. JSON under `n8n/workflows/` is importable and **inactive**. n8n strips credentials on export; these files use `$env` instead of stored credentials. Set the variables in `.env.example` before you activate a workflow.
 
-## 1. Form to CRM to segment
+Nothing below searches before it creates. A second POST creates a second person.
 
-**Trigger.** `POST /webhook/form-lead` from WordPress or any form.
+## 1. Form to CRM
 
-**Body.**
+**File.** `n8n/workflows/01-form-to-crm.json`
+
+**Trigger.** `POST /webhook/aperture-lead`
+
+**What the graph does.** Webhook, then three HTTP nodes in order:
+
+1. `POST $env.TWENTY_URL/rest/people` with `Authorization: Bearer $env.TWENTY_TOKEN`
+2. `POST $env.CHATWOOT_URL/api/v1/accounts/$env.CHATWOOT_ACCOUNT_ID/contacts` with header `api_access_token: $env.CHATWOOT_TOKEN`
+3. `POST $env.MAUTIC_URL/api/contacts/new` with `Authorization: Basic $env.MAUTIC_BASIC`
+
+**Body the webhook expects.**
 
 ```json
 {
   "email": "ada@example.com",
   "firstName": "Ada",
   "lastName": "Lovelace",
+  "name": "Ada Lovelace",
   "phone": "+15551212",
-  "source": "site:home",
-  "message": "Need a quote"
+  "source": "site:home"
 }
 ```
 
-**Steps.**
-
-1. Reject the call if `email` is missing.
-2. Normalize phone to E.164. If parsing fails, keep the raw value and set `phone_valid=false`.
-3. Search Twenty by email. Create the person if absent. Store `source`.
-4. Upsert the Mautic contact. Add to segment `inbound-web`.
-5. If `message` is non-empty, open or append a Chatwoot conversation and set contact attribute `twenty_id`.
-
-**File.** `n8n/workflows/01-form-to-crm.json` (skeleton). Replace the placeholder nodes with your Twenty and Mautic credentials after those profiles are up.
+**Not in this file yet.** Rejecting a missing email, E.164 normalization, Twenty search-by-email, Mautic segment `inbound-web`, opening a Chatwoot conversation.
 
 ## 2. Speed to lead
 
-**Trigger.** Twenty webhook, person created, `source` starts with `ads:`.
+**File.** `n8n/workflows/02-speed-to-lead.json`
 
-**Steps.**
+**Trigger.** `POST /webhook/aperture-sms` with `{ "to", "body" }`.
 
-1. Stop if local time is inside quiet hours (default 21:00–08:00 in `TZ`).
-2. Send one SMS through Twilio: "Hi {{firstName}}, this is {{agency}}. Want a 15-min slot?"
-3. Write the SMS body back to a Twenty note.
-4. Wait 10 minutes. If no inbound SMS matched the number, assign a Chatwoot conversation to the default team.
+**What the graph does.** One Twilio request: `POST https://api.twilio.com/2010-04-01/Accounts/$env.TWILIO_ACCOUNT_SID/Messages.json` as form fields `To`, `From` (`$env.TWILIO_FROM`), `Body`, with `Authorization: Basic $env.TWILIO_BASIC`.
 
-Do not loop this workflow on its own note-created event.
+**Not in this file yet.** Quiet hours, writing a Twenty note, a 10-minute wait, or opening Chatwoot if nobody replies. Do not point this webhook at itself.
 
 ## 3. Booking to pipeline
 
-**Trigger.** Cal.com `BOOKING_CREATED`.
+**File.** `n8n/workflows/03-booking.json`
 
-**Steps.**
+**Trigger.** `POST /webhook/aperture-booking`
 
-1. Match attendee email to a Twenty person. Create one if needed.
-2. Move the open opportunity to stage `Booked`, or create an opportunity named after the event type.
-3. Enroll the Mautic contact in campaign `appointment-nurture`.
-4. Schedule an SMS for 24 hours before `startTime`. Cancel that execution on `BOOKING_CANCELLED` (second workflow, same correlation id).
+**What the graph does.** In parallel: `POST $env.CALCOM_URL/api/v2/bookings` with `Bearer $env.CALCOM_API_KEY`, and `POST $env.TWENTY_URL/rest/opportunities` with stage `Appointment`. The Twenty call creates a body; it does not look up an existing opportunity id.
 
-## 4. Inbox shows CRM context
+**Not in this file yet.** Matching the attendee to a person, Mautic `appointment-nurture`, a 24-hour reminder, or cancelling that reminder on `BOOKING_CANCELLED`.
 
-**Trigger.** Chatwoot `conversation_created`.
+## 4. Inbox note
 
-**Steps.**
+**File.** `n8n/workflows/04-inbox-context.json`
 
-1. Read email and phone from the contact.
-2. Lookup Twenty.
-3. Private note: open deals, last Mautic email subject, tags.
-4. If no match, create a Twenty lead with `source=inbox` and write `twenty_id` back to Chatwoot.
+**Trigger.** `POST /webhook/aperture-reply` with `{ "conversationId", "body" }`.
+
+**What the graph does.** `POST $env.CHATWOOT_URL/api/v1/accounts/$env.CHATWOOT_ACCOUNT_ID/conversations/{conversationId}/messages` with `private: true`.
+
+**Not in this file yet.** Reading the Chatwoot contact, looking them up in Twenty, or creating a lead when there is no match. If `conversationId` is not a Chatwoot id, Chatwoot returns an error and the node is set to never-error so the execution stays visible.
+
+## Import
+
+In n8n: Workflows → Import from file. Activate only after a manual execution against a test contact shows the status you expect. The compose file publishes port 5678 for that.
 
 ## Contributing a playbook
 
-1. Export from n8n with credentials stripped (n8n does this by default).
+1. Export from n8n with credentials stripped.
 2. Name the file `NN-short-slug.json`.
-3. Add a section here: trigger, payload, steps, failure mode.
-4. Do not include API keys, phone numbers of real clients, or webhook secrets.
+3. Add a section here with the trigger, the HTTP calls that actually exist, and the steps that are still missing.
+4. Do not commit API keys, real client numbers, or webhook secrets.

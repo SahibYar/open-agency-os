@@ -1,20 +1,13 @@
-# Aperture console
+# Console
 
-The clickable agency demo. One workspace, twelve areas a GoHighLevel user already knows, each owned by an open tool:
+Removed.
 
-| Area | Owner |
-| --- | --- |
-| Dashboard | Aperture |
-| Conversations | Chatwoot |
-| Calendars | Cal.com |
-| Contacts, opportunities | Twenty |
-| Payments | Stripe, written back through n8n |
-| Marketing | Mautic |
-| Automations | n8n |
-| Sites, memberships | WordPress |
-| Reputation | n8n review-request playbook (no fake Birdeye) |
-| Reporting | Aperture, from the same records |
+This folder used to hold a clickable sketch of twelve agency screens. The sketch kept its data in memory and, on “Capture lead”, printed “is in Twenty, Chatwoot, and the ads segment” without making an HTTP call. That is not an integration, so the sketch is not in the repository anymore.
 
-Actions cross the bus. Capturing a lead creates the Twenty person, the pipeline card, the Chatwoot thread, and a Mautic enrollment in one step. Booking moves the deal. Running speed-to-lead writes an SMS onto the thread.
+The integration you can run from this repo is:
 
-`src/` here is that console. It expects the Aperture app shell (TanStack Router, the existing design tokens). Demo records live in the browser so a walkthrough starts from the same story every time. Reset is in the sidebar.
+- `docker compose --profile core up -d` for Caddy, Postgres, Redis, and n8n
+- the other profiles for Twenty, Chatwoot, Cal.com, Mautic, and WordPress
+- the workflows in `n8n/workflows/`, imported by hand and left inactive until the env vars in `.env.example` are set
+
+A system was written only when that product’s API returns success. See `docs/playbooks.md` for the calls each file makes and the calls it still does not make.

@@ -54,11 +54,29 @@ The contract is **events through n8n**, not one proprietary database.
 
 ## What you get today
 
-- `docker-compose.yml` with profiles: `core`, `crm`, `inbox`, `booking`, `marketing`, `pages`
-- `.env.example` and a Caddyfile so each product has a hostname
-- Postgres init that creates separate databases (`n8n`, `twenty`, `chatwoot`, `calcom`)
-- Documented playbooks: form to CRM, speed-to-lead SMS, booking to pipeline, inbox context
-- An honest gap list. We will not pretend reputation management or SaaS mode already exist
+- [`docker-compose.yml`](docker-compose.yml) with profiles: `core`, `crm`, `inbox`, `booking`, `marketing`, `pages`. Each service is an upstream image (`twentycrm/twenty`, `chatwoot/chatwoot`, `calcom/cal.com`, `mautic/mautic`, `wordpress`, `n8nio/n8n`, `caddy`, Postgres, Redis, MariaDB). This repo does not reimplement those products.
+- [`.env.example`](.env.example) and a [Caddyfile](Caddyfile) so each product has a hostname. App secrets (Twenty `APP_SECRET`, Chatwoot `SECRET_KEY_BASE`) are separate from the API tokens the workflows send.
+- [Postgres init](ops/postgres-init/01-databases.sql) that creates `n8n`, `twenty`, `chatwoot`, and `calcom`. [MariaDB init](ops/mariadb-init/01-wordpress.sql) creates the WordPress database next to Mautic.
+- Four **inactive** n8n workflows under [`n8n/workflows/`](n8n/workflows). You import them. They do not run until you activate them. With env set, they HTTP-call Twenty, Chatwoot, Mautic, Cal.com, and Twilio. They do **not** yet search-before-create, normalize phone numbers, honor quiet hours, or cancel a reminder. [docs/playbooks.md](docs/playbooks.md) lists both the shipped graph and the steps still missing.
+- An honest gap list. Reputation management and SaaS mode are not in this repository.
+
+There is no in-repo CRM that pretends a button wrote to Twenty. `console/` used to ship a UI sketch that printed “is in Twenty” from memory. That sketch is gone. A write happened only if the upstream returned a success status.
+
+## Where each claim lives
+
+| Claim | File |
+| --- | --- |
+| Compose profiles and upstream images | [docker-compose.yml](docker-compose.yml) |
+| Hostnames | [Caddyfile](Caddyfile) |
+| Required secrets and workflow API env | [.env.example](.env.example) |
+| Separate Postgres databases | [ops/postgres-init/01-databases.sql](ops/postgres-init/01-databases.sql) |
+| Form webhook → Twenty, Chatwoot, Mautic | [n8n/workflows/01-form-to-crm.json](n8n/workflows/01-form-to-crm.json) |
+| SMS webhook → Twilio | [n8n/workflows/02-speed-to-lead.json](n8n/workflows/02-speed-to-lead.json) |
+| Booking webhook → Cal.com and Twenty | [n8n/workflows/03-booking.json](n8n/workflows/03-booking.json) |
+| Reply webhook → Chatwoot private note | [n8n/workflows/04-inbox-context.json](n8n/workflows/04-inbox-context.json) |
+| What those graphs still do not do | [docs/playbooks.md](docs/playbooks.md) |
+
+n8n is given `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` and the `TWENTY_*`, `CHATWOOT_*`, `MAUTIC_*`, `CALCOM_*`, and `TWILIO_*` variables so a node expression can read them. Internal defaults point at Docker DNS (`http://twenty:3000`, `http://chatwoot:3000`, `http://mautic`, `http://calcom:3000`), not at the public URL.
 
 ## Quick start
 
