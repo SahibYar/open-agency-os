@@ -1,0 +1,15 @@
+{
+  "name": "Aperture Form to CRM",
+  "nodes": [
+    {
+      "parameters": { "path": "aperture-lead", "httpMethod": "POST" },
+      "id": "webhook",
+      "name": "Form webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "aperture-lead"
+    }
+  ],
+  "active": false
+}

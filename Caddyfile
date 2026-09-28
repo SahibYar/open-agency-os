@@ -1,0 +1,27 @@
+{
+  email {$CADDY_EMAIL:ops@example.com}
+}
+
+glue.{$DOMAIN:localhost} {
+  reverse_proxy n8n:5678
+}
+
+crm.{$DOMAIN:localhost} {
+  reverse_proxy twenty:3000
+}
+
+inbox.{$DOMAIN:localhost} {
+  reverse_proxy chatwoot:3000
+}
+
+book.{$DOMAIN:localhost} {
+  reverse_proxy calcom:3000
+}
+
+go.{$DOMAIN:localhost} {
+  reverse_proxy mautic:80
+}
+
+pages.{$DOMAIN:localhost} {
+  reverse_proxy wordpress:80
+}
