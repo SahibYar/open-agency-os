@@ -1,0 +1,190 @@
+# Aperture — Open Agency OS
+# Profiles: core, crm, inbox, booking, marketing, pages
+# Start: docker compose --profile core up -d
+
+name: aperture
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["core", "crm", "inbox", "booking"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aperture}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-aperture}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./ops/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aperture}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["core", "crm", "inbox"]
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+  mariadb:
+    image: mariadb:11
+    profiles: ["marketing", "pages"]
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: mautic
+      MYSQL_USER: mautic
+      MYSQL_PASSWORD: ${MAUTIC_DB_PASSWORD:?set MAUTIC_DB_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  n8n:
+    image: n8nio/n8n:latest
+    profiles: ["core"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-https}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      GENERIC_TIMEZONE: ${TZ:-UTC}
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-aperture}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["core"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  twenty:
+    image: twentycrm/twenty:latest
+    profiles: ["crm"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      PG_DATABASE_URL: postgres://${POSTGRES_USER:-aperture}:${POSTGRES_PASSWORD}@postgres:5432/twenty
+      REDIS_URL: redis://redis:6379
+      SERVER_URL: ${TWENTY_SERVER_URL:-http://localhost:3000}
+      APP_SECRET: ${TWENTY_APP_SECRET:?set TWENTY_APP_SECRET}
+    ports:
+      - "3000:3000"
+
+  chatwoot:
+    image: chatwoot/chatwoot:latest
+    profiles: ["inbox"]
+    restart: unless-stopped
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SECRET_KEY_BASE: ${CHATWOOT_SECRET:?set CHATWOOT_SECRET}
+      FRONTEND_URL: ${CHATWOOT_URL:-http://localhost:3001}
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: ${POSTGRES_USER:-aperture}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_URL: redis://redis:6379
+      RAILS_ENV: production
+    ports:
+      - "3001:3000"
+
+  chatwoot-worker:
+    image: chatwoot/chatwoot:latest
+    profiles: ["inbox"]
+    restart: unless-stopped
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    depends_on:
+      - chatwoot
+    environment:
+      SECRET_KEY_BASE: ${CHATWOOT_SECRET}
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: ${POSTGRES_USER:-aperture}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_URL: redis://redis:6379
+      RAILS_ENV: production
+
+  calcom:
+    image: calcom/cal.com:latest
+    profiles: ["booking"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-aperture}:${POSTGRES_PASSWORD}@postgres:5432/calcom
+      NEXTAUTH_SECRET: ${CALCOM_NEXTAUTH_SECRET:?set CALCOM_NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${CALCOM_URL:-http://localhost:3002}
+      CALENDSO_ENCRYPTION_KEY: ${CALCOM_ENCRYPTION_KEY:?set CALCOM_ENCRYPTION_KEY}
+    ports:
+      - "3002:3000"
+
+  mautic:
+    image: mautic/mautic:latest
+    profiles: ["marketing"]
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    environment:
+      MAUTIC_DB_HOST: mariadb
+      MAUTIC_DB_USER: mautic
+      MAUTIC_DB_PASSWORD: ${MAUTIC_DB_PASSWORD}
+      MAUTIC_DB_NAME: mautic
+    ports:
+      - "8088:80"
+    volumes:
+      - mautic_data:/var/www/html
+
+  wordpress:
+    image: wordpress:latest
+    profiles: ["pages"]
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    environment:
+      WORDPRESS_DB_HOST: mariadb
+      WORDPRESS_DB_USER: mautic
+      WORDPRESS_DB_PASSWORD: ${MAUTIC_DB_PASSWORD}
+      WORDPRESS_DB_NAME: wordpress
+    ports:
+      - "8089:80"
+    volumes:
+      - wp_data:/var/www/html
+
+volumes:
+  postgres_data:
+  redis_data:
+  mariadb_data:
+  n8n_data:
+  caddy_data:
+  caddy_config:
+  mautic_data:
+  wp_data:
