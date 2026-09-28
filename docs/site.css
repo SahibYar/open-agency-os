@@ -20,10 +20,22 @@ a { color: inherit; }
 .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.25rem; }
 header { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); background: rgba(10,10,11,0.9); backdrop-filter: blur(12px); }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 0; }
-.brand { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; }
-.mark { width: 2rem; height: 2rem; display: grid; place-items: center; border: 1px solid var(--border-strong); border-radius: 10px; font-family: var(--display); }
-.brand strong { display: block; font-family: var(--display); font-size: 1.15rem; font-weight: 400; }
-.brand span { display: block; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.brand { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; color: var(--fg); }
+.mark {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  color: var(--fg);
+  flex: none;
+}
+.mark svg { width: 16px; height: 16px; display: block; }
+.brand-name { line-height: 1; }
+.brand-name strong { display: block; font-family: var(--display); font-size: 1.15rem; font-weight: 400; letter-spacing: -0.02em; text-transform: none; color: var(--fg); }
+.brand-name span { display: none; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+@media (min-width: 640px) { .brand-name span { display: block; } }
 nav { display: flex; gap: 0.25rem; flex-wrap: wrap; }
 nav a { text-decoration: none; color: var(--muted); font-size: 0.9rem; padding: 0.45rem 0.7rem; border-radius: 8px; }
 nav a[aria-current="page"] { background: var(--raised); color: var(--fg); }
@@ -57,4 +69,4 @@ ul.clean li { margin: 0.25rem 0; }
 footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 0.875rem; }
 footer .wrap { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 1.25rem 2rem; }
 footer a { color: var(--fg); }
-@media (max-width: 800px) { nav.desktop { display: none; } .brand span { display: none; } }
+@media (max-width: 800px) { nav.desktop { display: none; } }
