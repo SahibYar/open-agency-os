@@ -1,31 +1,21 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Vs HighLevel — Aperture</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono&family=Instrument+Serif&display=swap"/>
-<link rel="stylesheet" href="../site.css"/></head><body>
-<header><div class="wrap bar"><a class="brand" href="../"><span class="mark">A</span><span><strong>Aperture</strong><span>Open Agency OS</span></span></a>
-<nav class="desktop"><a href="../">Manifesto</a><a href="../stack/">Stack</a><a href="../guide/">Deploy</a><a href="./" aria-current="page">Vs HighLevel</a><a href="../playbooks/">Playbooks</a></nav>
-<a class="star" href="https://github.com/SahibYar/open-agency-os">Star on GitHub</a></div></header>
-<main class="wrap">
-<p class="kicker">Honest comparison</p>
-<h1>GoHighLevel vs a self-hosted open stack</h1>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#0a0a0b"/>
+<title>Compare — Aperture</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&display=swap"/>
+<link rel="stylesheet" href="../site.css"/>
+</head><body><div class="shell">
+<header><div class="bar">
+<a class="brand" href="../"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94"/><path d="M9.69 8h11.48"/><path d="m7.38 12 5.74-9.94"/><path d="M9.69 16 3.95 6.06"/><path d="M14.31 16H2.83"/><path d="m16.62 12-5.74 9.94"/></svg></span><span class="brand-copy"><strong>Aperture</strong><span>Open Agency OS</span></span></a>
+<nav class="desk"><a href="../">Manifesto</a><a href="../stack/">Stack</a><a href="../guide/">Deploy</a><a href="../compare/" aria-current="page">Vs HighLevel</a><a href="../playbooks/">Playbooks</a></nav>
+<a class="star" href="https://github.com/SahibYar/open-agency-os"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.35 6.84 9.71.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.81 0 .27.18.6.69.49A10.04 10.04 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z"/></svg><span class="long">Star on GitHub</span><span class="short">Star</span></a>
+</div><nav class="mobile"><a href="../">Manifesto</a><a href="../stack/">Stack</a><a href="../guide/">Deploy</a><a href="../compare/" aria-current="page">Vs HighLevel</a><a href="../playbooks/">Playbooks</a></nav></header>
+<main class="page"><p class="kicker">Honest comparison</p><h1>GoHighLevel vs a self-hosted open stack</h1>
 <p class="lede">HighLevel is a product. Aperture is an integration. If you need white-label SaaS tomorrow with zero ops, stay on HighLevel. If you want to own the data and stop paying per-task and per-contact rent, this is the path.</p>
-<table>
-<thead><tr><th>Capability</th><th>GoHighLevel</th><th>Aperture stack</th></tr></thead>
-<tbody>
-<tr><td>CRM &amp; pipelines</td><td>Built in</td><td>Twenty (or EspoCRM / SuiteCRM)</td></tr>
-<tr><td>Email automation</td><td>Built in</td><td>Mautic</td></tr>
-<tr><td>SMS / voice</td><td>Built in, usage billed</td><td>Twilio / Telnyx via n8n</td></tr>
-<tr><td>Conversations</td><td>Unified inbox</td><td>Chatwoot</td></tr>
-<tr><td>Calendars</td><td>Built in</td><td>Cal.com</td></tr>
-<tr><td>Funnels</td><td>Built in</td><td>WordPress + builder</td></tr>
-<tr><td>Workflows across apps</td><td>Internal + Zapier</td><td>n8n (self-hosted, no per-task tax)</td></tr>
-<tr><td>Data ownership</td><td>Vendor cloud</td><td>Your server. Your database.</td></tr>
-<tr><td>Per-contact pricing</td><td>Platform + usage</td><td>None. Hardware + carrier only.</td></tr>
-<tr><td>White-label resale</td><td>SaaS mode</td><td>Partial — hostname + branding. SaaS control plane is in progress.</td></tr>
-<tr><td>Reputation</td><td>Built in</td><td>Not yet. Tracked as a gap.</td></tr>
-</tbody></table>
-<p class="lede" style="margin-top:1.5rem">GoHighLevel is a trademark of its owner. This project is independent and does not implement HighLevel’s proprietary software. We describe a functional alternative by composing open-source products.</p>
-<p><a href="https://github.com/SahibYar/open-agency-os/blob/main/docs/comparison.md">Full comparison in the repo</a></p>
-</main>
-<footer><div class="wrap"><p>Aperture is not affiliated with GoHighLevel.</p><a href="https://github.com/SahibYar/open-agency-os">Repository</a></div></footer>
-</body></html>
+<div class="tablewrap"><table><thead><tr><th>Capability</th><th>GoHighLevel</th><th>Aperture stack</th></tr></thead><tbody><tr><td>CRM & pipelines</td><td>Built in</td><td>Twenty (or EspoCRM / SuiteCRM)</td></tr><tr><td>Email automation</td><td>Built in</td><td>Mautic</td></tr><tr><td>SMS / voice</td><td>Built in, usage billed</td><td>Twilio / Telnyx via n8n</td></tr><tr><td>Conversations</td><td>Unified inbox</td><td>Chatwoot</td></tr><tr><td>Calendars</td><td>Built in</td><td>Cal.com</td></tr><tr><td>Funnels</td><td>Built in</td><td>WordPress + builder</td></tr><tr><td>Workflows across apps</td><td>Internal + Zapier</td><td>n8n (self-hosted, no per-task tax)</td></tr><tr><td>Data ownership</td><td>Vendor cloud</td><td>Your server. Your database.</td></tr><tr><td>Per-contact pricing</td><td>Platform + usage</td><td>None. Hardware + carrier only.</td></tr><tr><td>White-label resale</td><td>SaaS mode</td><td>Partial — hostname + branding. SaaS control plane is in progress.</td></tr><tr><td>Reputation</td><td>Built in</td><td>Not yet. Tracked as a gap.</td></tr></tbody></table></div>
+<p class="note">GoHighLevel is a trademark of its owner. This project is independent and does not implement HighLevel’s proprietary software. We describe a functional alternative by composing open-source products.</p>
+<p class="note"><a href="https://github.com/SahibYar/open-agency-os/blob/main/docs/comparison.md">Full comparison in the repo</a></p></main>
+<footer><div class="inner"><p>Aperture is not affiliated with GoHighLevel. It is an independent open-source integration of existing software.</p><a href="https://github.com/SahibYar/open-agency-os">github.com/SahibYar/open-agency-os</a></div></footer>
+</div></body></html>
