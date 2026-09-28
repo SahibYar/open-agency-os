@@ -28,10 +28,11 @@ header { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--b
   place-items: center;
   border: 1px solid var(--border-strong);
   border-radius: 10px;
-  color: var(--fg);
+  color: transparent;
+  font-size: 0;
   flex: none;
+  background: center / 16px 16px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23eceae4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m14.31 8 5.74 9.94'/%3E%3Cpath d='M9.69 8h11.48'/%3E%3Cpath d='m7.38 12 5.74-9.94'/%3E%3Cpath d='M9.69 16 3.95 6.06'/%3E%3Cpath d='M14.31 16H2.83'/%3E%3Cpath d='m16.62 12-5.74 9.94'/%3E%3C/svg%3E");
 }
-.mark svg { width: 16px; height: 16px; display: block; }
 .brand-name { line-height: 1; }
 .brand-name strong { display: block; font-family: var(--display); font-size: 1.15rem; font-weight: 400; letter-spacing: -0.02em; text-transform: none; color: var(--fg); }
 .brand-name span { display: none; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
