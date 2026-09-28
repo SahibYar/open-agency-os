@@ -100,7 +100,8 @@ footer a { color: var(--fg); display: inline-flex; align-items: center; gap: 4px
 .tooltop strong { display: block; font-weight: 500; font-size: 18px; line-height: 28px; }
 .role { color: var(--muted); font-size: 14px; line-height: 20px; }
 .why { margin-top: 16px; font-size: 14px; line-height: 22.75px; }
-.facts { margin: 16px 0 0; display: grid; gap: 12px; font-size: 14px; }
+.facts { margin: 16px 0 0; display: grid; gap: 12px; font-size: 14px; line-height: 20px; }
+.facts dt, .facts dd, a.up, .role { line-height: 20px; }
 @media (min-width: 640px) { .facts { grid-template-columns: repeat(3, 1fr); } }
 .facts dt { color: var(--subtle); }
 .facts dd { margin: 4px 0 0; color: var(--muted); line-height: 20px; }
@@ -114,16 +115,18 @@ pre { margin: 40px 0 0; overflow: auto; background: var(--surface); padding: 16p
 .tablewrap { margin-top: 40px; overflow-x: auto; }
 table { width: 100%; min-width: 640px; border-collapse: collapse; text-align: left; font-size: 14px; }
 th { background: var(--surface); color: var(--muted); font-weight: 500; }
-th, td { padding: 12px 16px; }
+th, td { padding: 12px 16px; line-height: 20px; }
 tbody tr { border-top: 1px solid var(--border); }
 td:first-child { font-weight: 500; }
 td:not(:first-child) { color: var(--muted); }
-.note { margin-top: 32px; max-width: 672px; color: var(--muted); font-size: 14px; line-height: 22.75px; }
+.note { margin-top: 32px; max-width: 672px; color: var(--muted); font-size: 14px; line-height: 20px; }
+.note + .note { margin-top: 16px; }
 ol.play { list-style: none; padding: 0; margin: 40px 0 0; display: grid; gap: 16px; }
 .play h2 { margin-top: 8px; font-size: 24px; line-height: 32px; }
 .play .role { margin-top: 4px; }
 .play ol { margin: 16px 0 0; padding-left: 1.25rem; color: var(--muted); font-size: 14px; line-height: 22.75px; }
-.play ol li { margin: 8px 0; padding-left: 4px; }
+.play ol li { margin: 0; padding-left: 4px; }
+.play ol li + li { margin-top: 8px; }
 .rise { animation: rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 .rise:nth-child(2) { animation-delay: 50ms; }
 .rise:nth-child(3) { animation-delay: 90ms; }
