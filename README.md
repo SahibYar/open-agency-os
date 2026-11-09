@@ -130,8 +130,6 @@ GHL migration: [docs/migration-from-ghl.md](docs/migration-from-ghl.md)
 
 ## Honest comparison
 
-Every row in this table was verified by reading the actual files in this repository — not marketing claims.
-
 ### Feature parity
 
 | Capability | GoHighLevel | Aperture | Notes |
