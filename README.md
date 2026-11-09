@@ -8,6 +8,8 @@ We are not cloning a closed product. We are integrating mature, already-availabl
 [![Status: public build](https://img.shields.io/badge/status-public_build-111111)](https://github.com/SahibYar/open-agency-os)
 [![Stars](https://img.shields.io/github/stars/SahibYar/open-agency-os?style=social)](https://github.com/SahibYar/open-agency-os/stargazers)
 
+**[sahibyar.github.io/open-agency-os](https://sahibyar.github.io/open-agency-os/)**
+
 > **Public claim.** This repository is independent. It is not affiliated with, endorsed by, or a copy of GoHighLevel. GoHighLevel is a trademark of its owner. Aperture is the missing integration layer: Docker Compose, Caddy, n8n playbooks, and documentation that turn Twenty, Mautic, Chatwoot, Cal.com, n8n, and WordPress into one coherent stack agencies can self-host.
 
 If you run an agency and you are tired of renting your CRM, **star this repository**. Stars are how other operators find an open path.
