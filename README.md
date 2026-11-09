@@ -16,7 +16,7 @@ If you run an agency and you are tired of renting your CRM, **star this reposito
 
 ## Who this is for
 
-- Marketing and service agencies that want CRM, nurture, inbox, booking, and sites without a $97–$497 platform bill plus usage.
+- Marketing and service agencies that want CRM, nurture, inbox, booking, and sites without a $97–$497 platform bill plus usage fees.
 - Operators who will run a VPS and own the database.
 - Contributors who would rather wire excellent projects together than rewrite them.
 
@@ -28,39 +28,42 @@ GoHighLevel won because it bundled contacts, pipelines, email, SMS, conversation
 
 **Aperture is the system.** We do not fork Twenty into a fake HighLevel skin. We publish how the pieces talk, how you deploy them, and which commercial features still have no honest open equivalent.
 
-Search terms we are willing to own:
-
-- open source GoHighLevel alternative
-- self-hosted agency CRM
-- Twenty + Mautic + Chatwoot + n8n
-- open source HighLevel stack
-
 ## The stack
 
 | Layer | Default | What it covers | License |
 | --- | --- | --- | --- |
 | CRM & pipelines | [Twenty](https://github.com/twentyhq/twenty) | Contacts, companies, deals, custom objects | AGPL-3.0 |
 | Marketing automation | [Mautic](https://www.mautic.org/) | Campaigns, segments, scoring, drip | GPL-3.0 |
-| Conversations | [Chatwoot](https://github.com/chatwoot/chatwoot) | Shared inbox, web chat, WhatsApp, social | MIT |
+| Conversations | [Chatwoot](https://github.com/chatwoot/chatwoot) | Shared inbox, web chat, WhatsApp, social, **SMS** | MIT |
 | Booking | [Cal.com](https://github.com/calcom/cal.com) | Public booking, round-robin, webhooks | AGPL-3.0 |
 | Funnels & sites | [WordPress](https://wordpress.org/) | Landing pages, forms, memberships | GPL |
 | Workflow glue | [n8n](https://github.com/n8n-io/n8n) | Cross-app automation, no per-task tax | Fair-code |
 | SMS & voice | Twilio, Telnyx, or any SIP | Outbound SMS, voice, carrier swap | Commercial API |
-| Edge | [Caddy](https://caddyserver.com/) | Automatic TLS and hostnames | Apache-2.0 |
-
-Alternates we accept, not defaults: EspoCRM or SuiteCRM instead of Twenty. Listmonk is not a substitute for Mautic when you need journeys.
+| Edge + SSO | [Caddy](https://caddyserver.com/) + [Authelia](https://www.authelia.com/) | Automatic TLS, hostnames, single sign-on | Apache-2.0 / Apache-2.0 |
 
 The contract is **events through n8n**, not one proprietary database.
 
 ## What you get today
 
-- [`docker-compose.yml`](docker-compose.yml) with profiles: `core`, `crm`, `inbox`, `booking`, `marketing`, `pages`. Each service is an upstream image (`twentycrm/twenty`, `chatwoot/chatwoot`, `calcom/cal.com`, `mautic/mautic`, `wordpress`, `n8nio/n8n`, `caddy`, Postgres, Redis, MariaDB). This repo does not reimplement those products.
-- [`.env.example`](.env.example) and a [Caddyfile](Caddyfile) so each product has a hostname. App secrets (Twenty `APP_SECRET`, Chatwoot `SECRET_KEY_BASE`) are separate from the API tokens the workflows send.
-- [Postgres init](ops/postgres-init/01-databases.sql) that creates `n8n`, `twenty`, `chatwoot`, and `calcom`. [MariaDB init](ops/mariadb-init/01-wordpress.sql) creates the WordPress database next to Mautic.
-- Four **inactive** n8n workflows under [`n8n/workflows/`](n8n/workflows). You import them. They do not run until you activate them. With env set, they HTTP-call Twenty, Chatwoot, Mautic, Cal.com, and Twilio. They do **not** yet search-before-create, normalize phone numbers, honor quiet hours, or cancel a reminder. [docs/playbooks.md](docs/playbooks.md) lists both the shipped graph and the steps still missing.
-- An honest gap list. Reputation management and SaaS mode are not in this repository.
+- **`docker-compose.yml`** with profiles: `core`, `crm`, `inbox`, `booking`, `marketing`, `pages`, `sso`. Each service is an upstream image. This repo does not reimplement those products.
+- **`setup.sh`** — generates all required secrets in one command.
+- **`backup.sh`** — Postgres dump + volume snapshot guidance.
+- **Nine n8n workflows** covering the most-used GoHighLevel automation patterns:
+  - Form → CRM (with validation + E.164 normalisation)
+  - Speed to lead SMS
+  - Booking to pipeline
+  - Inbox context note
+  - **Missed call text back** ⭐
+  - **Lead follow-up sequence** (immediate + 10-min follow-up + Mautic nurture) ⭐
+  - **Appointment reminder** (schedule-based, 24h before) ⭐
+  - **Post-appointment review request** (2h wait → Google review SMS) ⭐
+  - **Chatwoot → Twenty CRM sync** ⭐
+- **Authelia SSO** — one login screen across all services (`--profile sso`)
+- **Agency control panel** at `dash.{DOMAIN}` — service health, setup checklist, quick commands
+- **`ops/client-add.sh`** — per-client subdomain + credential provisioning
+- **Docs:** getting-started, playbooks, architecture, comparison, SSO setup, SMS inbox, email deliverability, GHL migration guide
 
-There is no in-repo CRM that pretends a button wrote to Twenty. `console/` used to ship a UI sketch that printed “is in Twenty” from memory. That sketch is gone. A write happened only if the upstream returned a success status.
+An honest gap list. Reputation management and SaaS mode are not in this repository.
 
 ## Where each claim lives
 
@@ -68,15 +71,25 @@ There is no in-repo CRM that pretends a button wrote to Twenty. `console/` used 
 | --- | --- |
 | Compose profiles and upstream images | [docker-compose.yml](docker-compose.yml) |
 | Hostnames | [Caddyfile](Caddyfile) |
+| Caddyfile with Authelia SSO | [Caddyfile.sso](Caddyfile.sso) |
 | Required secrets and workflow API env | [.env.example](.env.example) |
+| Generate all secrets automatically | [setup.sh](setup.sh) |
+| Postgres dump + volume backup | [backup.sh](backup.sh) |
 | Separate Postgres databases | [ops/postgres-init/01-databases.sql](ops/postgres-init/01-databases.sql) |
-| Form webhook → Twenty, Chatwoot, Mautic | [n8n/workflows/01-form-to-crm.json](n8n/workflows/01-form-to-crm.json) |
+| WordPress isolated DB user | [ops/mariadb-init/02-wordpress-user.sh](ops/mariadb-init/02-wordpress-user.sh) |
+| Per-client subdomain provisioning | [ops/client-add.sh](ops/client-add.sh) |
+| Authelia config | [authelia/configuration.yml](authelia/configuration.yml) |
+| Authelia user database | [authelia/users_database.yml](authelia/users_database.yml) |
+| Form webhook → validate → Twenty, Chatwoot, Mautic | [n8n/workflows/01-form-to-crm.json](n8n/workflows/01-form-to-crm.json) |
 | SMS webhook → Twilio | [n8n/workflows/02-speed-to-lead.json](n8n/workflows/02-speed-to-lead.json) |
 | Booking webhook → Cal.com and Twenty | [n8n/workflows/03-booking.json](n8n/workflows/03-booking.json) |
 | Reply webhook → Chatwoot private note | [n8n/workflows/04-inbox-context.json](n8n/workflows/04-inbox-context.json) |
+| Missed call → immediate text back | [n8n/workflows/05-missed-call-text-back.json](n8n/workflows/05-missed-call-text-back.json) |
+| Lead → SMS sequence + Mautic nurture | [n8n/workflows/06-lead-follow-up-sequence.json](n8n/workflows/06-lead-follow-up-sequence.json) |
+| Schedule-based appointment reminder | [n8n/workflows/07-appointment-reminder.json](n8n/workflows/07-appointment-reminder.json) |
+| Post-appointment review request | [n8n/workflows/08-review-request.json](n8n/workflows/08-review-request.json) |
+| Chatwoot conversation → CRM sync | [n8n/workflows/09-chatwoot-crm-sync.json](n8n/workflows/09-chatwoot-crm-sync.json) |
 | What those graphs still do not do | [docs/playbooks.md](docs/playbooks.md) |
-
-n8n is given `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` and the `TWENTY_*`, `CHATWOOT_*`, `MAUTIC_*`, `CALCOM_*`, and `TWILIO_*` variables so a node expression can read them. Internal defaults point at Docker DNS (`http://twenty:3000`, `http://chatwoot:3000`, `http://mautic`, `http://calcom:3000`), not at the public URL.
 
 ## Quick start
 
@@ -85,8 +98,8 @@ n8n is given `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` and the `TWENTY_*`, `CHATWOOT_
 ```bash
 git clone https://github.com/SahibYar/open-agency-os.git
 cd open-agency-os
-cp .env.example .env
-# set DOMAIN, POSTGRES_PASSWORD, and the secrets marked required
+bash setup.sh           # generates all secrets into .env
+# then set DOMAIN= and CADDY_EMAIL= in .env
 docker compose --profile core up -d
 ```
 
@@ -100,41 +113,62 @@ docker compose --profile core --profile marketing up -d
 docker compose --profile core --profile pages up -d
 ```
 
-Import workflows from [`n8n/workflows/`](n8n/workflows). Point webhooks at your public n8n URL.
+Enable single sign-on (optional):
 
-Full walkthrough: [docs/getting-started.md](docs/getting-started.md).
+```bash
+cp Caddyfile.sso Caddyfile
+docker compose --profile core --profile sso up -d
+# Default login: admin / ChangeMe1! — change it in authelia/users_database.yml
+```
+
+Open the control panel at `https://dash.{DOMAIN}` after DNS resolves.
+
+Import all nine workflows from [`n8n/workflows/`](n8n/workflows). Fill the API tokens in `.env`. Activate workflows one at a time after a successful manual test.
+
+Full walkthrough: [docs/getting-started.md](docs/getting-started.md)
+GHL migration: [docs/migration-from-ghl.md](docs/migration-from-ghl.md)
 
 ## Honest comparison
 
 | Capability | GoHighLevel | Aperture |
 | --- | --- | --- |
-| CRM & pipelines | Built in | Twenty (or EspoCRM / SuiteCRM) |
-| Email automation | Built in | Mautic |
+| CRM & pipelines | Built in | Twenty |
+| Email automation | Built in | Mautic + Postmark/SES |
 | SMS / voice | Built in, usage billed | Twilio / Telnyx via n8n |
-| Conversations | Unified inbox | Chatwoot |
+| Conversations (unified inbox) | Yes | Chatwoot (email + chat + **SMS via Twilio**) |
 | Calendars | Built in | Cal.com |
-| Funnels | Built in | WordPress + a block builder |
+| Funnels | Built in | WordPress + page builder |
+| Missed call text back | Built in | ✅ Workflow 05 |
+| Lead follow-up sequence | Built in | ✅ Workflow 06 |
+| Appointment reminders | Built in | ✅ Workflow 07 |
+| Review requests | Built in | ✅ Workflow 08 |
 | Cross-app workflows | Internal builder + Zapier | Self-hosted n8n |
+| Single login | Yes | ✅ Authelia SSO (optional) |
 | Data ownership | Vendor cloud | Your server |
-| Per-contact fee | Platform + usage | None. You pay hardware and the carrier |
-| White-label resale | SaaS mode | Partial. Hostnames and branding. Control plane is a roadmap item |
-| Reputation | Built in | Not yet |
-| One login | Yes | Not yet. Authelia / Pocket ID is the plan |
+| Per-contact fee | Platform + usage | None |
+| White-label resale | SaaS mode | Partial — per-client subdomains |
+| Reputation management | Built in | Not yet |
+| Mobile app | iOS + Android | Not present |
+| AI inbox responses | Built in | Not present |
 
-Details: [docs/comparison.md](docs/comparison.md).
+Details: [docs/comparison.md](docs/comparison.md)
 
 ## Gaps we will not hide
 
-1. **White-label SaaS mode.** HighLevel sells sub-accounts. We start with one hostname per service and per-client credentials. A real snapshot control plane is tracked, not shipped.
-2. **Reputation management.** There is no mature open Birdeye. Reviews are an n8n playbook until a module exists.
-3. **Unified login.** Each upstream product authenticates itself today.
-4. **You are the operator.** The software license is free. Backups, upgrades, email deliverability, and on-call are not.
+1. **White-label SaaS mode.** Per-client subdomains work. A real snapshot control plane is tracked, not shipped.
+2. **Reputation management.** No mature open Birdeye. Reviews are a roadmap item.
+3. **Mobile app.** Not present.
+4. **You are the operator.** Backups, upgrades, email deliverability, and on-call are yours.
 
 ## Docs
 
 - [Getting started](docs/getting-started.md)
-- [Architecture](docs/architecture.md)
 - [Playbooks](docs/playbooks.md)
+- [Architecture](docs/architecture.md)
+- [Single sign-on](docs/sso.md)
+- [SMS inbox setup](docs/sms-inbox.md)
+- [Email deliverability](docs/email-deliverability.md)
+- [Migrate from GoHighLevel](docs/migration-from-ghl.md)
 - [Multi-tenancy for agencies](docs/multi-tenancy.md)
 - [Comparison](docs/comparison.md)
 - [Roadmap](ROADMAP.md)
@@ -142,15 +176,15 @@ Details: [docs/comparison.md](docs/comparison.md).
 
 ## How to grow this
 
-1. Star the repo. Discovery for “open source GoHighLevel alternative” is mostly GitHub search plus stars.
+1. Star the repo. Discovery for "open source GoHighLevel alternative" is mostly GitHub search plus stars.
 2. Open an issue titled with the HighLevel feature you cannot replace yet.
 3. Ship one n8n workflow JSON under `n8n/workflows/` with a short note in `docs/playbooks.md`.
 4. Run `core` on a cheap VPS and file the first thing that broke.
 
 ## Legal
 
-GoHighLevel and HighLevel are trademarks of their owner. This project does not copy their source, UI, copy, or private APIs. Upstream products keep their own licenses (AGPL, GPL, MIT, fair-code). Files we write in this repository — compose, docs, playbook JSON, Caddy config — are MIT unless a file says otherwise.
+GoHighLevel and HighLevel are trademarks of their owner. This project does not copy their source, UI, copy, or private APIs. Upstream products keep their own licenses (AGPL, GPL, MIT, fair-code, Apache-2.0). Files we write in this repository — compose, docs, playbook JSON, Caddy config — are MIT unless a file says otherwise.
 
-n8n's Sustainable Use License is not a classic OSI license. Read it before you resell n8n itself. Hosting the upstream image for your own agency is the intended use here; embedding n8n into a paid SaaS you sell may require an n8n enterprise license. That is their license, not ours.
+n8n's Sustainable Use License is not a classic OSI license. Read it before you resell n8n itself. Hosting the upstream image for your own agency is the intended use here.
 
 Started in public by [Sahib Yar](https://github.com/SahibYar).

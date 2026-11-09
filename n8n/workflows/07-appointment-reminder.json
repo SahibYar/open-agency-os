@@ -1,0 +1,115 @@
+{
+  "name": "Aperture — appointment reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "minutesInterval": 60 }]
+        }
+      },
+      "id": "trigger-schedule",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.CALCOM_URL }}/api/v2/bookings?status=upcoming&limit=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.CALCOM_API_KEY }}" },
+            { "name": "cal-api-version", "value": "2024-08-13" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-cal-bookings",
+      "name": "Get upcoming bookings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter bookings that start between 23h and 25h from now (24h reminder window)\nconst now = Date.now();\nconst h23 = now + 23 * 3600 * 1000;\nconst h25 = now + 25 * 3600 * 1000;\n\nconst raw = $input.first().json;\nconst bookings = Array.isArray(raw.data) ? raw.data : [];\n\nconst due = bookings.filter(b => {\n  const t = new Date(b.startTime).getTime();\n  return t >= h23 && t <= h25;\n});\n\nif (due.length === 0) return [];\n\nreturn due.map(b => {\n  const attendee = (b.attendees || [])[0] || {};\n  const startLocal = new Date(b.startTime).toLocaleTimeString('en-US', {\n    hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short'\n  });\n  return {\n    json: {\n      name:  attendee.name  || 'Guest',\n      email: attendee.email || '',\n      phone: attendee.phoneNumber || '',\n      startTime: b.startTime,\n      startLocal,\n      title: b.title || 'Appointment',\n      bookingUid: b.uid\n    }\n  };\n});"
+      },
+      "id": "code-filter",
+      "name": "Filter 24-h window",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "cond-phone",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-phone",
+      "name": "Has phone?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{$env.TWILIO_ACCOUNT_SID}}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Basic {{$env.TWILIO_BASIC}}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To",   "value": "={{ $json.phone }}" },
+            { "name": "From", "value": "={{ $env.TWILIO_FROM }}" },
+            { "name": "Body", "value": "=Hi {{ $json.name }}, reminder: your appointment \"{{ $json.title }}\" is tomorrow at {{ $json.startLocal }}. Reply to reschedule: {{ $env.BOOKING_PAGE_URL }}" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-sms-reminder",
+      "name": "Send reminder SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 220]
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [[{ "node": "Get upcoming bookings", "type": "main", "index": 0 }]]
+    },
+    "Get upcoming bookings": {
+      "main": [[{ "node": "Filter 24-h window", "type": "main", "index": 0 }]]
+    },
+    "Filter 24-h window": {
+      "main": [[{ "node": "Has phone?", "type": "main", "index": 0 }]]
+    },
+    "Has phone?": {
+      "main": [
+        [{ "node": "Send reminder SMS", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

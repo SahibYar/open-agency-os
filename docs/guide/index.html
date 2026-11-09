@@ -16,15 +16,15 @@
 <p class="lede">This site is the map. The runnable definition lives in the public repository: compose files, env templates, Caddyfile, and n8n exports.</p>
 <ol class="steps">
 <li class="step"><span class="num">01</span><div><h3>Provision a box</h3><p>16 GB RAM is the realistic floor for CRM + n8n + inbox. 8 GB is fine for core (Caddy + Postgres + Redis + n8n) while you learn.</p></div></li>
-<li class="step"><span class="num">02</span><div><h3>Clone the repo</h3><p>git clone https://github.com/SahibYar/open-agency-os.git && cd open-agency-os && cp .env.example .env</p></div></li>
+<li class="step"><span class="num">02</span><div><h3>Clone and generate secrets</h3><p>git clone https://github.com/SahibYar/open-agency-os.git && cd open-agency-os && bash setup.sh — fills .env with fresh secrets. Then set DOMAIN= and CADDY_EMAIL= in .env.</p></div></li>
 <li class="step"><span class="num">03</span><div><h3>Bring up core</h3><p>docker compose --profile core up -d — Caddy, Postgres, Redis, n8n. Open n8n on the glue hostname.</p></div></li>
 <li class="step"><span class="num">04</span><div><h3>Add one layer at a time</h3><p>crm, inbox, booking, marketing, pages are compose profiles. Do not enable all of them on a laptop.</p></div></li>
 <li class="step"><span class="num">05</span><div><h3>Import playbooks</h3><p>n8n → Import from n8n/workflows. Point webhooks at your public glue URL.</p></div></li>
 </ol>
 <pre>git clone https://github.com/SahibYar/open-agency-os.git
 cd open-agency-os
-cp .env.example .env
-# set DOMAIN, secrets, and Twilio keys
+bash setup.sh           # generates all secrets
+# set DOMAIN= and CADDY_EMAIL= in .env
 docker compose --profile core up -d</pre>
 <div class="row"><a class="btn" href="https://github.com/SahibYar/open-agency-os#quick-start">Open the README</a><a class="btn ghost" href="https://github.com/SahibYar/open-agency-os/blob/main/docker-compose.yml">docker-compose.yml</a></div></main>
 <footer><div class="inner"><p>Aperture is not affiliated with GoHighLevel. It is an independent open-source integration of existing software.</p><a href="https://github.com/SahibYar/open-agency-os">github.com/SahibYar/open-agency-os <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a></div></footer>

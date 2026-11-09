@@ -1,0 +1,144 @@
+{
+  "name": "Aperture — Chatwoot conversation to CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aperture-chatwoot-sync",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-cw",
+      "name": "Chatwoot webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "aperture-chatwoot-sync"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chatwoot conversation_created webhook payload\nconst body = $input.first().json.body || {};\n\n// Only process new conversations, not every message update\nif (body.event !== 'conversation_created') return [];\n\nconst meta = body.meta || {};\nconst sender = meta.sender || {};\n\nconst name  = sender.name  || 'Unknown';\nconst email = sender.email || '';\nconst phone = sender.phone_number || '';\nconst convId = body.id || '';\nconst accountId = body.account_id || $env.CHATWOOT_ACCOUNT_ID;\n\nif (!email && !phone) return []; // nothing to match against CRM\n\nreturn [{ json: { name, email, phone, convId, accountId } }];"
+      },
+      "id": "code-extract",
+      "name": "Extract contact info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.TWENTY_URL }}/rest/people?filter=emails.primaryEmail[eq]:{{ encodeURIComponent($json.email) }}&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.TWENTY_TOKEN }}" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-twenty-search",
+      "name": "Twenty search by email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const searchResult = $input.first().json;\nconst people = searchResult.data || [];\nconst contact = $('Extract contact info').item.json;\n\nif (people.length > 0) {\n  // Person found — return their ID and existing data\n  return [{ json: { found: true, personId: people[0].id, ...contact } }];\n} else {\n  // Person not found — signal to create\n  return [{ json: { found: false, personId: null, ...contact } }];\n}"
+      },
+      "id": "code-decide",
+      "name": "Person found?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "cond-found",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-found",
+      "name": "Exists in CRM?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWENTY_URL }}/rest/people",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.TWENTY_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $json.name.split(' ')[0], lastName: $json.name.split(' ').slice(1).join(' ') || '-' }, emails: { primaryEmail: $json.email }, phones: { primaryPhoneNumber: $json.phone } }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-twenty-create",
+      "name": "Twenty create person",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWENTY_URL }}/rest/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.TWENTY_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Chatwoot conversation', body: 'New inbox conversation started. Chatwoot ID: ' + $json.convId, noteTargets: { people: [{ id: $json.personId }] } }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-twenty-note",
+      "name": "Twenty log note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 200]
+    }
+  ],
+  "connections": {
+    "Chatwoot webhook": {
+      "main": [[{ "node": "Extract contact info", "type": "main", "index": 0 }]]
+    },
+    "Extract contact info": {
+      "main": [[{ "node": "Twenty search by email", "type": "main", "index": 0 }]]
+    },
+    "Twenty search by email": {
+      "main": [[{ "node": "Person found?", "type": "main", "index": 0 }]]
+    },
+    "Person found?": {
+      "main": [[{ "node": "Exists in CRM?", "type": "main", "index": 0 }]]
+    },
+    "Exists in CRM?": {
+      "main": [
+        [{ "node": "Twenty log note",     "type": "main", "index": 0 }],
+        [{ "node": "Twenty create person","type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

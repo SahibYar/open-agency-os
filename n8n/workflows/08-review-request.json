@@ -1,0 +1,127 @@
+{
+  "name": "Aperture — post-appointment review request",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aperture-booking-done",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-done",
+      "name": "Booking completed webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "aperture-booking-done"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Cal.com sends BOOKING_PAID or a custom trigger; adjust triggerEvent to match your setup\nconst body = $input.first().json.body || {};\n\n// Accept any payload that contains attendee info — the trigger can be Cal.com webhook,\n// a manual n8n trigger from another workflow, or a CRM stage-change webhook.\nconst attendee = body.attendee || body.attendees?.[0] || {};\nconst name  = attendee.name  || body.name  || '';\nconst email = attendee.email || body.email || '';\nconst phone = attendee.phone || attendee.phoneNumber || body.phone || '';\n\nif (!phone && !email) return []; // nothing to reach them on\n\nreturn [{ json: { name: name || 'there', email, phone } }];"
+      },
+      "id": "code-extract",
+      "name": "Extract attendee",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": { "unit": "hours", "amount": 2 },
+      "id": "wait-2h",
+      "name": "Wait 2 hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "cond-phone",
+              "leftValue": "={{ $('Extract attendee').item.json.phone }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-phone",
+      "name": "Has phone?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{$env.TWILIO_ACCOUNT_SID}}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Basic {{$env.TWILIO_BASIC}}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To",   "value": "={{ $('Extract attendee').item.json.phone }}" },
+            { "name": "From", "value": "={{ $env.TWILIO_FROM }}" },
+            { "name": "Body", "value": "=Hi {{ $('Extract attendee').item.json.name }}, thanks for meeting with {{ $env.BRAND_NAME }}! If we were helpful, a quick Google review means the world: {{ $env.GOOGLE_REVIEW_URL }} — takes 60 seconds. 🙏" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-sms-review",
+      "name": "Review request SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.MAUTIC_URL }}/api/contacts/new",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Basic {{ $env.MAUTIC_BASIC }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $('Extract attendee').item.json.email, tags: ['appointment-complete', 'review-requested'] }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-mautic-tag",
+      "name": "Mautic tag contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 400]
+    }
+  ],
+  "connections": {
+    "Booking completed webhook": {
+      "main": [[{ "node": "Extract attendee", "type": "main", "index": 0 }]]
+    },
+    "Extract attendee": {
+      "main": [[{ "node": "Wait 2 hours", "type": "main", "index": 0 }]]
+    },
+    "Wait 2 hours": {
+      "main": [[{ "node": "Has phone?", "type": "main", "index": 0 }]]
+    },
+    "Has phone?": {
+      "main": [
+        [{ "node": "Review request SMS", "type": "main", "index": 0 }],
+        [{ "node": "Mautic tag contact",  "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

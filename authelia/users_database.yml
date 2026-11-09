@@ -1,0 +1,20 @@
+---
+# Aperture — Authelia local users database
+#
+# Default credentials:  admin / ChangeMe1!
+# CHANGE THE PASSWORD before exposing to the internet.
+#
+# To generate a new hash:
+#   docker run --rm authelia/authelia:latest \
+#     authelia crypto hash generate bcrypt --password 'YourNewPassword'
+#
+# Then replace the 'password:' value below with the output hash.
+
+users:
+  admin:
+    displayname: Agency Admin
+    # bcrypt hash of:  ChangeMe1!
+    password: "$2y$12$GTD/SBjmP.LULxYCHZDRyeap5SqwmEDpqy9WzDFa6KtcR3wAY1iBe"
+    email: admin@example.com
+    groups:
+      - admins

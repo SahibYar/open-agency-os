@@ -1,0 +1,75 @@
+# Caddyfile.sso — Aperture with Authelia single sign-on
+#
+# USAGE:
+#   cp Caddyfile.sso Caddyfile          # replace base Caddyfile
+#   docker compose --profile core --profile sso up -d
+#
+# This version adds a single login screen (Authelia) in front of every
+# service UI. n8n webhook paths (/webhook/*) are bypassed so external
+# services (Twilio, Cal.com, WordPress forms) can POST without a session.
+#
+# Replace Caddyfile with this file only after confirming auth.{DOMAIN}
+# resolves to your server and the authelia container is healthy.
+
+{
+  email {$CADDY_EMAIL:ops@example.com}
+}
+
+# ── Authelia portal ──────────────────────────────────────────────────────────
+# No forward_auth here — this IS the auth service.
+auth.{$DOMAIN:localhost} {
+  reverse_proxy authelia:9091
+}
+
+# ── Reusable auth snippet ─────────────────────────────────────────────────────
+(require_sso) {
+  forward_auth authelia:9091 {
+    uri /api/authz/forward-auth
+    copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+  }
+}
+
+# ── n8n — webhook paths are public, UI requires login ────────────────────────
+glue.{$DOMAIN:localhost} {
+  @webhook path /webhook/* /webhooks/* /webhook-waiting/*
+  handle @webhook {
+    reverse_proxy n8n:5678
+  }
+  handle {
+    import require_sso
+    reverse_proxy n8n:5678
+  }
+}
+
+# ── All other services ────────────────────────────────────────────────────────
+crm.{$DOMAIN:localhost} {
+  import require_sso
+  reverse_proxy twenty:3000
+}
+
+inbox.{$DOMAIN:localhost} {
+  import require_sso
+  reverse_proxy chatwoot:3000
+}
+
+book.{$DOMAIN:localhost} {
+  import require_sso
+  reverse_proxy calcom:3000
+}
+
+go.{$DOMAIN:localhost} {
+  import require_sso
+  reverse_proxy mautic:80
+}
+
+pages.{$DOMAIN:localhost} {
+  import require_sso
+  reverse_proxy wordpress:80
+}
+
+# ── Agency control panel ──────────────────────────────────────────────────────
+dash.{$DOMAIN:localhost} {
+  import require_sso
+  root * /srv/console
+  file_server
+}

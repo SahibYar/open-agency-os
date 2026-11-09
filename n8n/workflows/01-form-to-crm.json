@@ -17,6 +17,16 @@
     },
     {
       "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\n\n// Reject missing or obviously invalid email\nif (!body.email || !String(body.email).includes('@')) {\n  throw new Error('email is required and must contain @');\n}\n\n// Normalise phone to E.164 (best-effort: handles 10-digit US, strips formatting)\nlet phone = String(body.phone || '').replace(/\\D/g, '');\nif (phone.length === 10) phone = '1' + phone;\nif (phone.length >= 10) phone = '+' + phone;\nelse phone = '';\n\n// Split composite name field into first / last\nconst fullName = String(body.name || '');\nconst firstName = (body.firstName || fullName.split(' ')[0] || 'Unknown').trim();\nconst lastName = (body.lastName || fullName.split(' ').slice(1).join(' ') || '-').trim();\n\nreturn [{\n  json: {\n    email: body.email.trim().toLowerCase(),\n    firstName,\n    lastName,\n    phone,\n    source: body.source || ''\n  }\n}];"
+      },
+      "id": "code-validate",
+      "name": "Validate & normalise",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "={{$env.TWENTY_URL}}/rest/people",
         "sendHeaders": true,
@@ -27,14 +37,14 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: { firstName: $json.body.firstName || $json.body.name, lastName: $json.body.lastName || '-' }, emails: { primaryEmail: $json.body.email }, phones: { primaryPhoneNumber: $json.body.phone || '' } }) }}",
+        "jsonBody": "={{ JSON.stringify({ name: { firstName: $json.firstName, lastName: $json.lastName }, emails: { primaryEmail: $json.email }, phones: { primaryPhoneNumber: $json.phone } }) }}",
         "options": { "response": { "response": { "neverError": true } } }
       },
       "id": "http-twenty",
       "name": "Twenty create person",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [500, 300]
+      "position": [720, 300]
     },
     {
       "parameters": {
@@ -48,14 +58,14 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ name: $('Form webhook').item.json.body.name, email: $('Form webhook').item.json.body.email, phone_number: $('Form webhook').item.json.body.phone || '' }) }}",
+        "jsonBody": "={{ JSON.stringify({ name: $('Validate & normalise').item.json.firstName + ' ' + $('Validate & normalise').item.json.lastName, email: $('Validate & normalise').item.json.email, phone_number: $('Validate & normalise').item.json.phone }) }}",
         "options": { "response": { "response": { "neverError": true } } }
       },
       "id": "http-chatwoot",
       "name": "Chatwoot create contact",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [760, 300]
+      "position": [960, 300]
     },
     {
       "parameters": {
@@ -69,18 +79,19 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ firstname: $('Form webhook').item.json.body.firstName, lastname: $('Form webhook').item.json.body.lastName, email: $('Form webhook').item.json.body.email, phone: $('Form webhook').item.json.body.phone || '' }) }}",
+        "jsonBody": "={{ JSON.stringify({ firstname: $('Validate & normalise').item.json.firstName, lastname: $('Validate & normalise').item.json.lastName, email: $('Validate & normalise').item.json.email, phone: $('Validate & normalise').item.json.phone }) }}",
         "options": { "response": { "response": { "neverError": true } } }
       },
       "id": "http-mautic",
       "name": "Mautic create contact",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1020, 300]
+      "position": [1200, 300]
     }
   ],
   "connections": {
-    "Form webhook": { "main": [[{ "node": "Twenty create person", "type": "main", "index": 0 }]] },
+    "Form webhook": { "main": [[{ "node": "Validate & normalise", "type": "main", "index": 0 }]] },
+    "Validate & normalise": { "main": [[{ "node": "Twenty create person", "type": "main", "index": 0 }]] },
     "Twenty create person": { "main": [[{ "node": "Chatwoot create contact", "type": "main", "index": 0 }]] },
     "Chatwoot create contact": { "main": [[{ "node": "Mautic create contact", "type": "main", "index": 0 }]] }
   },

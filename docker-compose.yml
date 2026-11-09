@@ -1,10 +1,17 @@
 # Aperture — Open Agency OS
-# Profiles: core, crm, inbox, booking, marketing, pages
-# Start: docker compose --profile core up -d
+# Profiles: core, crm, inbox, booking, marketing, pages, sso
+#
+# Minimal start:  docker compose --profile core up -d
+# Full stack:     docker compose --profile core --profile crm --profile inbox up -d
+# With SSO:       docker compose --profile core --profile sso up -d
+#                 (use Caddyfile.sso — see docs/sso.md)
 
 name: aperture
 
 services:
+
+  # ── Databases ──────────────────────────────────────────────────────────────
+
   postgres:
     image: postgres:16-alpine
     profiles: ["core", "crm", "inbox", "booking"]
@@ -39,9 +46,13 @@ services:
       MYSQL_DATABASE: mautic
       MYSQL_USER: mautic
       MYSQL_PASSWORD: ${MAUTIC_DB_PASSWORD:?set MAUTIC_DB_PASSWORD}
+      # Passed to 02-wordpress-user.sh so WordPress gets its own isolated DB user.
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./ops/mariadb-init:/docker-entrypoint-initdb.d:ro
+
+  # ── Core ───────────────────────────────────────────────────────────────────
 
   n8n:
     image: n8nio/n8n:latest
@@ -57,18 +68,29 @@ services:
       WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
       GENERIC_TIMEZONE: ${TZ:-UTC}
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      # CRM
       TWENTY_URL: ${TWENTY_URL:-http://twenty:3000}
       TWENTY_TOKEN: ${TWENTY_TOKEN:-}
+      # Inbox
       CHATWOOT_URL: ${CHATWOOT_INTERNAL_URL:-http://chatwoot:3000}
       CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-1}
       CHATWOOT_TOKEN: ${CHATWOOT_TOKEN:-}
+      # Marketing
       MAUTIC_URL: ${MAUTIC_URL:-http://mautic}
       MAUTIC_BASIC: ${MAUTIC_BASIC:-}
+      MAUTIC_NURTURE_SEGMENT_ID: ${MAUTIC_NURTURE_SEGMENT_ID:-1}
+      # Booking
       CALCOM_URL: ${CALCOM_INTERNAL_URL:-http://calcom:3000}
       CALCOM_API_KEY: ${CALCOM_API_KEY:-}
+      # SMS / voice
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_BASIC: ${TWILIO_BASIC:-}
       TWILIO_FROM: ${TWILIO_FROM:-}
+      # Workflow settings
+      BRAND_NAME: ${BRAND_NAME:-My Agency}
+      BOOKING_PAGE_URL: ${BOOKING_PAGE_URL:-https://book.example.com}
+      GOOGLE_REVIEW_URL: ${GOOGLE_REVIEW_URL:-}
+      # n8n database
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_DATABASE: n8n
@@ -86,10 +108,40 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Agency control panel served at dash.{DOMAIN}
+      - ./console:/srv/console:ro
       - caddy_data:/data
       - caddy_config:/config
+
+  # ── SSO (optional — start with --profile sso + use Caddyfile.sso) ──────────
+
+  authelia:
+    image: authelia/authelia:latest
+    profiles: ["sso"]
+    restart: unless-stopped
+    environment:
+      # Secrets — these override the placeholder values in authelia/configuration.yml
+      AUTHELIA_JWT_SECRET: ${AUTHELIA_JWT_SECRET:?set AUTHELIA_JWT_SECRET}
+      AUTHELIA_SESSION__SECRET: ${AUTHELIA_SESSION_SECRET:?set AUTHELIA_SESSION_SECRET}
+      AUTHELIA_STORAGE__ENCRYPTION_KEY: ${AUTHELIA_STORAGE_ENCRYPTION_KEY:?set AUTHELIA_STORAGE_ENCRYPTION_KEY}
+      # Domain-specific overrides
+      AUTHELIA_DEFAULT_REDIRECTION_URL: https://auth.${DOMAIN:-example.com}
+      AUTHELIA_SESSION__DOMAIN: ${DOMAIN:-example.com}
+    volumes:
+      - ./authelia:/config
+      - authelia_data:/config/db.sqlite3
+    ports:
+      - "9091:9091"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9091/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ── CRM ────────────────────────────────────────────────────────────────────
 
   twenty:
     image: twentycrm/twenty:latest
@@ -107,6 +159,8 @@ services:
       APP_SECRET: ${TWENTY_APP_SECRET:?set TWENTY_APP_SECRET}
     ports:
       - "3000:3000"
+
+  # ── Inbox ──────────────────────────────────────────────────────────────────
 
   chatwoot:
     image: chatwoot/chatwoot:latest
@@ -146,6 +200,8 @@ services:
       REDIS_URL: redis://redis:6379
       RAILS_ENV: production
 
+  # ── Booking ────────────────────────────────────────────────────────────────
+
   calcom:
     image: calcom/cal.com:latest
     profiles: ["booking"]
@@ -160,6 +216,8 @@ services:
       CALENDSO_ENCRYPTION_KEY: ${CALCOM_ENCRYPTION_KEY:?set CALCOM_ENCRYPTION_KEY}
     ports:
       - "3002:3000"
+
+  # ── Marketing ──────────────────────────────────────────────────────────────
 
   mautic:
     image: mautic/mautic:latest
@@ -177,6 +235,8 @@ services:
     volumes:
       - mautic_data:/var/www/html
 
+  # ── Pages ──────────────────────────────────────────────────────────────────
+
   wordpress:
     image: wordpress:latest
     profiles: ["pages"]
@@ -185,8 +245,8 @@ services:
       - mariadb
     environment:
       WORDPRESS_DB_HOST: mariadb
-      WORDPRESS_DB_USER: mautic
-      WORDPRESS_DB_PASSWORD: ${MAUTIC_DB_PASSWORD}
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
       WORDPRESS_DB_NAME: wordpress
     ports:
       - "8089:80"
@@ -202,3 +262,4 @@ volumes:
   caddy_config:
   mautic_data:
   wp_data:
+  authelia_data:

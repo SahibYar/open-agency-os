@@ -25,3 +25,9 @@ go.{$DOMAIN:localhost} {
 pages.{$DOMAIN:localhost} {
   reverse_proxy wordpress:80
 }
+
+# Agency control panel — served from the console/ directory
+dash.{$DOMAIN:localhost} {
+  root * /srv/console
+  file_server
+}

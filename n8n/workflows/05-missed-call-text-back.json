@@ -1,0 +1,91 @@
+{
+  "name": "Aperture — missed call text back",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aperture-missed-call",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-call",
+      "name": "Twilio call webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "aperture-missed-call"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Twilio posts call status events as form-urlencoded; n8n exposes them in body\nconst body = $input.first().json.body || {};\n\n// Only act on inbound no-answer / busy calls\nconst missed = ['no-answer', 'busy', 'failed'];\nif (!missed.includes(body.CallStatus) || body.Direction !== 'inbound') {\n  return []; // not a missed inbound call — stop execution\n}\n\nif (!body.From) return []; // no caller number, skip\n\nreturn [{\n  json: {\n    to: body.From,\n    ourNumber: body.To,\n    callSid: body.CallSid,\n    status: body.CallStatus\n  }\n}];"
+      },
+      "id": "code-filter",
+      "name": "Filter missed inbound",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{$env.TWILIO_ACCOUNT_SID}}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Basic {{$env.TWILIO_BASIC}}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To",   "value": "={{ $json.to }}" },
+            { "name": "From", "value": "={{ $env.TWILIO_FROM }}" },
+            { "name": "Body", "value": "=Hey! Sorry I missed your call. How can I help? Reply here or book a time: {{ $env.BOOKING_PAGE_URL }}" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-sms",
+      "name": "Twilio send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CHATWOOT_URL }}/api/v1/accounts/{{ $env.CHATWOOT_ACCOUNT_ID }}/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api_access_token", "value": "={{ $env.CHATWOOT_TOKEN }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'Missed call ' + $('Filter missed inbound').item.json.to, phone_number: $('Filter missed inbound').item.json.to }) }}",
+        "options": { "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-chatwoot",
+      "name": "Chatwoot create contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 400]
+    }
+  ],
+  "connections": {
+    "Twilio call webhook": {
+      "main": [[{ "node": "Filter missed inbound", "type": "main", "index": 0 }]]
+    },
+    "Filter missed inbound": {
+      "main": [[
+        { "node": "Twilio send SMS",        "type": "main", "index": 0 },
+        { "node": "Chatwoot create contact","type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

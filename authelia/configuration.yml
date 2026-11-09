@@ -1,0 +1,65 @@
+---
+# Aperture — Authelia configuration
+# Provides a single login screen in front of all Aperture services.
+#
+# Secrets (jwt_secret, session.secret, storage.encryption_key) are injected
+# via environment variables — see docker-compose.yml and docs/sso.md.
+#
+# Domain-specific values (default_redirection_url, session.domain) are
+# overridden by AUTHELIA_DEFAULT_REDIRECTION_URL and AUTHELIA_SESSION__DOMAIN
+# env vars set in docker-compose.yml. The placeholder values below are only
+# used if those env vars are absent.
+
+server:
+  host: 0.0.0.0
+  port: 9091
+
+log:
+  level: info
+
+# Overridden by AUTHELIA_JWT_SECRET env var — do not put a real value here
+jwt_secret: placeholder-overridden-by-env
+
+# Redirect here after login — overridden by AUTHELIA_DEFAULT_REDIRECTION_URL
+default_redirection_url: https://auth.example.com
+
+totp:
+  issuer: aperture
+  period: 30
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+    password:
+      algorithm: bcrypt
+      iterations: 12
+
+access_control:
+  default_policy: one_factor
+
+session:
+  name: aperture_session
+  # Overridden by AUTHELIA_SESSION__SECRET env var
+  secret: placeholder-overridden-by-env
+  expiration: 8h
+  inactivity: 1h
+  # Overridden by AUTHELIA_SESSION__DOMAIN env var — must be your root domain
+  domain: example.com
+
+regulation:
+  max_retries: 5
+  find_time: 2m
+  ban_time: 5m
+
+storage:
+  local:
+    path: /config/db.sqlite3
+  # Overridden by AUTHELIA_STORAGE__ENCRYPTION_KEY env var
+  encryption_key: placeholder-overridden-by-env
+
+notifier:
+  # Writes auth notifications to a log file inside the container.
+  # Switch to smtp: for email-based 2FA and password reset notifications.
+  disable_startup_check: false
+  filesystem:
+    filename: /config/notifications.txt
