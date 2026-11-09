@@ -39,6 +39,13 @@ mkdir -p "$DIR"
 
 r() { openssl rand -hex "${1:-16}"; }
 
+# Portable case helpers — bash 3.2 (macOS) does not support ${var^^} / ${var^}
+upper() { echo "$1" | tr '[:lower:]' '[:upper:]'; }
+ucfirst() { echo "$(echo "${1:0:1}" | tr '[:lower:]' '[:upper:]')${1:1}"; }
+
+CLIENT_UPPER="$(upper "$CLIENT")"
+CLIENT_UCFIRST="$(ucfirst "$CLIENT")"
+
 # ── Caddy site block ──────────────────────────────────────────────────────────
 cat > "${DIR}/caddy.conf" <<EOF
 # ${CLIENT} — ${DOMAIN}
@@ -72,25 +79,25 @@ CLIENT_NAME=${CLIENT}
 CLIENT_DOMAIN=${DOMAIN}
 
 # Twenty CRM — Settings > API > Create API key
-${CLIENT^^}_TWENTY_TOKEN=
+${CLIENT_UPPER}_TWENTY_TOKEN=
 
 # Chatwoot — Profile > Access Token; Account ID from the URL (/app/accounts/N/...)
-${CLIENT^^}_CHATWOOT_TOKEN=
-${CLIENT^^}_CHATWOOT_ACCOUNT_ID=
+${CLIENT_UPPER}_CHATWOOT_TOKEN=
+${CLIENT_UPPER}_CHATWOOT_ACCOUNT_ID=
 
 # Mautic — base64 of "username:password"
-${CLIENT^^}_MAUTIC_BASIC=
+${CLIENT_UPPER}_MAUTIC_BASIC=
 
 # Cal.com — Settings > Developer > API Keys
-${CLIENT^^}_CALCOM_API_KEY=
+${CLIENT_UPPER}_CALCOM_API_KEY=
 
 # Twilio phone number assigned to this client
-${CLIENT^^}_TWILIO_FROM=
+${CLIENT_UPPER}_TWILIO_FROM=
 
 # Workflow settings for this client
-${CLIENT^^}_BRAND_NAME=${CLIENT^} Agency
-${CLIENT^^}_BOOKING_PAGE_URL=https://book.${DOMAIN}
-${CLIENT^^}_GOOGLE_REVIEW_URL=
+${CLIENT_UPPER}_BRAND_NAME=${CLIENT_UCFIRST} Agency
+${CLIENT_UPPER}_BOOKING_PAGE_URL=https://book.${DOMAIN}
+${CLIENT_UPPER}_GOOGLE_REVIEW_URL=
 EOF
 
 # ── README ────────────────────────────────────────────────────────────────────
