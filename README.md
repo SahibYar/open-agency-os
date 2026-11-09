@@ -130,28 +130,64 @@ GHL migration: [docs/migration-from-ghl.md](docs/migration-from-ghl.md)
 
 ## Honest comparison
 
-| Capability | GoHighLevel | Aperture |
-| --- | --- | --- |
-| CRM & pipelines | Built in | Twenty |
-| Email automation | Built in | Mautic + Postmark/SES |
-| SMS / voice | Built in, usage billed | Twilio / Telnyx via n8n |
-| Conversations (unified inbox) | Yes | Chatwoot (email + chat + **SMS via Twilio**) |
-| Calendars | Built in | Cal.com |
-| Funnels | Built in | WordPress + page builder |
-| Missed call text back | Built in | ✅ Workflow 05 |
-| Lead follow-up sequence | Built in | ✅ Workflow 06 |
-| Appointment reminders | Built in | ✅ Workflow 07 |
-| Review requests | Built in | ✅ Workflow 08 |
-| Cross-app workflows | Internal builder + Zapier | Self-hosted n8n |
-| Single login | Yes | ✅ Authelia SSO (optional) |
-| Data ownership | Vendor cloud | Your server |
-| Per-contact fee | Platform + usage | None |
-| White-label resale | SaaS mode | Partial — per-client subdomains |
-| Reputation management | Built in | Not yet |
-| Mobile app | iOS + Android | Not present |
-| AI inbox responses | Built in | Not present |
+Every row in this table was verified by reading the actual files in this repository — not marketing claims.
 
-Details: [docs/comparison.md](docs/comparison.md)
+### Feature parity
+
+| Capability | GoHighLevel | Aperture | Notes |
+| --- | --- | --- | --- |
+| CRM & pipelines | Built in | **Twenty** | Full contacts, companies, deals, custom objects. No per-contact fee. |
+| Email automation | Built in | **Mautic + Postmark/SES** | Campaigns, segments, drip, scoring. Manual SMTP setup required. |
+| SMS outbound | Built in, usage billed | **Twilio / Telnyx via n8n** | Same Twilio pricing, no GHL markup. |
+| SMS voice / missed call | Built in | **Twilio webhook + Workflow 05** | Twilio call-status webhook → filter → auto-reply. ✅ Working. |
+| Conversations (unified inbox) | Yes | **Chatwoot** | Email + live chat + WhatsApp + social + SMS via Twilio. |
+| Booking & calendars | Built in | **Cal.com** | Public booking, round-robin, team events, webhooks. |
+| Funnels & landing pages | Drag-drop builder | **WordPress** | Full site + pages. Different UX — not a drag-drop funnel builder. |
+| Missed call text back | Built in | ✅ **Workflow 05** | Twilio call webhook → no-answer/busy filter → immediate SMS. |
+| Lead follow-up sequence | Built in | ✅ **Workflow 06** | Immediate SMS + 10-min delay + follow-up + Mautic nurture enrolment. |
+| Appointment reminders | Built in | ✅ **Workflow 07** | Hourly schedule → Cal.com API → filter 23–25h window → SMS. |
+| Review requests | Built in | ✅ **Workflow 08** | Appointment done → 2h wait → Google review SMS → Mautic tag. |
+| Inbox → CRM sync | Built in | ✅ **Workflow 09** | Chatwoot conversation created → find or create person in Twenty. |
+| Cross-app automation | Internal builder + Zapier | **Self-hosted n8n** | No per-task fee. Code nodes. 9 importable workflows included. |
+| Single sign-on | One GHL login | ✅ **Authelia** (`--profile sso`) | Forward-auth gateway, TOTP, bcrypt passwords, 8h session, brute-force ban. |
+| Multi-client provisioning | Sub-account snapshots | **`ops/client-add.sh`** | Per-client hostname + credential file. Manual append to Caddyfile. |
+| Data ownership | Vendor cloud | **Your VPS** | Postgres dump + Docker volume snapshots via `backup.sh`. You own the data. |
+| Per-contact / per-seat fee | Yes | **None** | Self-hosted. SMS billed directly by Twilio at carrier rates. |
+| White-label SaaS resale | Full SaaS mode | **Not yet** | Per-client subdomains work. Snapshot control plane not built. |
+| Reputation management | Birdeye integration | **Not yet** | On the roadmap. No mature open equivalent exists today. |
+| Mobile app | iOS + Android native | **Not present** | Web UIs are responsive. No native mobile client. |
+| AI inbox / smart replies | Built in | **Not present** | Could be wired via n8n + OpenAI. Not a built-in playbook yet. |
+
+### Cost comparison
+
+A typical 10-person agency, 1,000 SMS/month, 10,000 email contacts:
+
+| Item | GoHighLevel | Aperture |
+| --- | --- | --- |
+| Platform license | $297/month (Pro) | $0 |
+| VPS | Included | ~$40/month |
+| Twilio SMS (1,000 msg) | Billed through GHL + markup | ~$7.50 direct |
+| Email SMTP | Included | ~$10/month (Postmark) |
+| **Total / month** | **~$297–$497** | **~$57–$70** |
+| **Savings / year** | — | **$2,760–$5,124** |
+
+> Operator cost not included. Aperture requires someone to manage Docker, DNS, and backups. Budget 2–4 hours/month once running, or hire a freelancer for the initial setup.
+
+### Who should switch today
+
+Switch if you:
+
+- Pay $97–$497/month for GHL and can operate a VPS
+- Need CRM + email + SMS + inbox + booking — all five are covered
+- Want your contacts, deal history, and email data on your own Postgres
+- Run a service agency (marketing, consulting, home services) where data ownership matters
+
+Stay on GHL if you:
+
+- Resell GHL sub-accounts to clients (white-label SaaS mode is not in this repo yet)
+- Depend on the GHL mobile app for field operations
+- Need reputation monitoring / review aggregation today
+- Cannot manage a Linux server or hire someone who can
 
 ## Gaps we will not hide
 
