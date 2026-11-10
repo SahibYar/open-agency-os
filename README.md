@@ -100,8 +100,7 @@ An honest gap list. Reputation management and SaaS mode are not in this reposito
 ```bash
 git clone https://github.com/SahibYar/open-agency-os.git
 cd open-agency-os
-bash setup.sh           # generates all secrets into .env
-# then set DOMAIN= and CADDY_EMAIL= in .env
+bash setup.sh           # prompts for domain + email, generates all secrets and URLs
 docker compose --profile core up -d
 ```
 
